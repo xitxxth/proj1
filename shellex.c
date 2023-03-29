@@ -67,6 +67,7 @@ int builtin_command(char **argv)
     if(!strcmp(argv[0], "cd")){//cd
         chdir(argv[1]);//cd + cmd(argv[1])
         system("pwd");
+        return 1;
     }
     return 0;                     /* Not a builtin command */
 }
