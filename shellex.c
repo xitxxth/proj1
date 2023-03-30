@@ -82,7 +82,7 @@ int builtin_command(char **argv)
         int i=1;
         fseek(fp, 0, SEEK_SET);
         while((fgets(strHistory, MAXLINE, fp))!=NULL) {
-            printf("%d %s\n", i++, strHistory);
+            printf("%d %s" i++, strHistory);
         }
         fseek(fp, 0, SEEK_END);
         return 1;//pass execve
