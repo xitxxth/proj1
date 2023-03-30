@@ -8,13 +8,14 @@ void eval(char *cmdline);
 int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
+FILE* fp;
 int mkdir_user();
 
 int main() 
 {
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
-    FILE* fp = fopen("history.txt", "at");//open history file if it exists or make a new history file
+    fp = fopen("history.txt", "a+t");//open history file if it exists or make a new history file
         if(!fp){
             printf("FILE OPEN ERROR\n");
             exit(0);//cannot use history tool, exit program
@@ -24,7 +25,7 @@ int main()
 	/* Read */
 	printf("> ");                   
 	fgets(cmdline, MAXLINE, stdin); 
-    fprintf(fp, "%s\n", cmdline);//save cmd lines in history.txt
+    fprintf(fp, "%s", cmdline);//save cmd lines in history.txt
 	if (feof(stdin)){
         if(fclose(fp))
             printf("FILE CLOSE ERROR\n");
@@ -76,8 +77,10 @@ int builtin_command(char **argv)
     //user defined history
     /*by making a txt file for keeping history data
     we can use the txt file again after quit my shell*/
-    if(!stcmp(argv[0], "history")){//history doesn't call fork, exec so we deal with it as built-in
-        
+    if(!strcmp(argv[0], "history")){//history doesn't call fork, exec so we deal with it as built-in
+        char* strHistory;
+        for(int i=1; fscanf(fp, "%s", strHistory)!=EOF; i++)
+            printf("%d %s\n", i, strHistory);
         return 1;//pass execve
     }
 
