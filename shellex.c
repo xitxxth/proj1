@@ -78,10 +78,10 @@ int builtin_command(char **argv)
     /*by making a txt file for keeping history data
     we can use the txt file again after quit my shell*/
     if(!strcmp(argv[0], "history")){//history doesn't call fork, exec so we deal with it as built-in
-        char *strHistory;
+        char strHistory[MAXLINE];
         int i=1;
         fseek(fp, 0, SEEK_SET);
-        while((fgets(strHistory, MAXLINE, fp))!=EOF){
+        while(!(fgets(strHistory, MAXLINE, fp))!){
             printf("%d %s\n", i++, strHistory);
         }
         fseek(fp, 0, SEEK_END);
