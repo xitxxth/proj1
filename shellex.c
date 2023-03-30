@@ -88,6 +88,7 @@ int builtin_command(char **argv)
             printf("%i\n", i++);
         }*/
         for(int i=0; i<5; i++){
+            fscanf(fp, "%s", strHistory);
             printf("%d %s\n", i, strHistory);
         }
         return 1;//pass execve
