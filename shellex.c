@@ -84,8 +84,11 @@ int builtin_command(char **argv)
             printf("FILE OPEN ERROR2\n");
             exit(0);
         }
-        while((fscanf(fp, "%s", strHistory))!=EOF){
+        /*while((fscanf(fp, "%s", strHistory))!=EOF){
             printf("%i\n", i++);
+        }*/
+        for(int i=0; i<5; i++){
+            printf("%d %s\n", i, strHistory);
         }
         return 1;//pass execve
     }
