@@ -79,8 +79,10 @@ int builtin_command(char **argv)
     we can use the txt file again after quit my shell*/
     if(!strcmp(argv[0], "history")){//history doesn't call fork, exec so we deal with it as built-in
         char* strHistory;
-        for(int i=1; fscanf(fp, "%s", strHistory)!=EOF; i++)
-            printf("%d %s\n", i, strHistory);
+        int i=1;
+        while((fscanf(fp, "%s", strHistory))!=EOF){
+            printf("%i\n", i++);
+        }
         return 1;//pass execve
     }
 
