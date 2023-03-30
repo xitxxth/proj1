@@ -25,7 +25,7 @@ int main()
 	/* Read */
 	printf("> ");                   
 	fgets(cmdline, MAXLINE, stdin); 
-    if(strcmp("!!", cmdline)!=0)
+    if(strncmp("!", cmdline, 1)!=0)
         fprintf(fp, "%s", cmdline);//save cmd lines in history.txt
 	if (feof(stdin)){
         if(fclose(fp))
@@ -94,6 +94,7 @@ int builtin_command(char **argv)
         while((fgets(tmpCmd, MAXLINE, fp))!=NULL) {}
         fseek(fp, 0, SEEK_END);
         printf("last command is %s", tmpCmd);
+        eval(tmpCmd);
     }
     /*else if(!strcmp(*(argv[0]), "!")){
 
