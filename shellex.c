@@ -25,7 +25,8 @@ int main()
 	/* Read */
 	printf("> ");                   
 	fgets(cmdline, MAXLINE, stdin); 
-    if(strncmp("!", cmdline, 1)!=0)
+    //user defined
+    if(strncmp("!!", cmdline, 2)!=0)//"!!" never written
         fprintf(fp, "%s", cmdline);//save cmd lines in history.txt
 	if (feof(stdin)){
         if(fclose(fp))
@@ -79,22 +80,28 @@ int builtin_command(char **argv)
     /*by making a txt file for keeping history data
     we can use the txt file again after quit my shell*/
     if(!strcmp(argv[0], "history")){//history doesn't call fork, exec so we deal with it as built-in
-        char strHistory[MAXLINE];
-        int i=1;
-        fseek(fp, 0, SEEK_SET);
-        while((fgets(strHistory, MAXLINE, fp))!=NULL) {
-            printf("%d %s", i++, strHistory);
+        char strHistory[MAXLINE];//history string
+        int i=1;//index for history list from 1 to ...
+        fseek(fp, 0, SEEK_SET);//reset file cursor
+        while((fgets(strHistory, MAXLINE, fp))!=NULL) {//to EOF
+            printf("%d %s", i++, strHistory);//print history
         }
-        fseek(fp, 0, SEEK_END);
+        fseek(fp, 0, SEEK_END);//move to EOF
         return 1;//pass execve
     }
-    if(!strcmp(argv[0], "!!")){
-        char tmpCmd[MAXLINE];
-        fseek(fp, 0, SEEK_SET);
-        while((fgets(tmpCmd, MAXLINE, fp))!=NULL) {}
-        fseek(fp, 0, SEEK_END);
-        printf("last command is %s", tmpCmd);
-        eval(tmpCmd);
+    if(strncmp(argv[0], "!", 1)){//"!"
+        if(!strcmp(argv[0], "!!")) {//"!!"
+            char tmpCmd[MAXLINE];//for the last cmd
+            fseek(fp, 0, SEEK_SET);//reset file cursor
+            while((fgets(tmpCmd, MAXLINE, fp))!=NULL) {}//to EOF
+            fseek(fp, 0, SEEK_END);//move to EOF
+            printf("last command is %s", tmpCmd);//print last cmd
+            eval(tmpCmd);//execute it
+            return 1;       
+        }
+        else{
+            printf("%c\n", *(argv[0]+1));
+        }
     }
     /*else if(!strcmp(*(argv[0]), "!")){
 
