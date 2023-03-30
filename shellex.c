@@ -13,13 +13,23 @@ int mkdir_user();
 int main() 
 {
     char cmdline[MAXLINE]; /* Command line */
+    /*user defined code, for > history*/
+    FILE* fp = fopen("history.txt", "at");//open history file if it exists or make a new history file
+        if(!fp){
+            printf("FILE OPEN ERROR\n");
+            exit(0);//cannot use history tool, exit program
+        }
 
     while (1) {
 	/* Read */
 	printf("> ");                   
 	fgets(cmdline, MAXLINE, stdin); 
-	if (feof(stdin))
+    fprintf(fp, "%s\n", cmdline);//save cmd lines in history.txt
+	if (feof(stdin)){
+        if(fclose(fp))
+            printf("FILE CLOSE ERROR\n");
 	    exit(0);
+    }
 
 	/* Evaluate */
 	eval(cmdline);
@@ -63,12 +73,15 @@ int builtin_command(char **argv)
 	exit(0);  
     if (!strcmp(argv[0], "&"))    /* Ignore singleton & */
 	return 1;
-    //user defined cd
-    if(!strcmp(argv[0], "cd")){//cd
-        chdir(argv[1]);//cd + cmd(argv[1])
-        system("pwd");
-        return 1;
+    //user defined history
+    /*by making a txt file for keeping history data
+    we can use the txt file again after quit my shell*/
+    if(!stcmp(argv[0], "history")){//history doesn't call fork, exec so we deal with it as built-in
+        
+        return 1;//pass execve
     }
+
+
     return 0;                     /* Not a builtin command */
 }
 /* $end eval */
