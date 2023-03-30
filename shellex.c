@@ -80,6 +80,10 @@ int builtin_command(char **argv)
     if(!strcmp(argv[0], "history")){//history doesn't call fork, exec so we deal with it as built-in
         char* strHistory;
         int i=1;
+        if(!fp){
+            printf("FILE OPEN ERROR2\n");
+            exit(0);
+        }
         while((fscanf(fp, "%s", strHistory))!=EOF){
             printf("%i\n", i++);
         }
