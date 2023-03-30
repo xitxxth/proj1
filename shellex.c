@@ -87,6 +87,16 @@ int builtin_command(char **argv)
         fseek(fp, 0, SEEK_END);
         return 1;//pass execve
     }
+    if(!strcmp(argv[0], "!!")){
+        char tmpCmd[MAXLINE];
+        fseek(fp, 0, SEEK_SET);
+        while((fgets(tmpCmd, MAXLINE, fp))!=NULL) {}
+        fseek(fp, 0, SEEK_END);
+        printf("last command is %s", tmpCmd);
+    }
+    /*else if(!strcmp(*(argv[0]), "!")){
+
+    }*/
 
 
     return 0;                     /* Not a builtin command */
