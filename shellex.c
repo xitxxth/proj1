@@ -9,7 +9,6 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-int mkdir_user();
 
 int main() 
 {
@@ -26,8 +25,14 @@ int main()
 	printf("> ");                   
 	fgets(cmdline, MAXLINE, stdin); 
     //user defined
-    if(strncmp("!", cmdline, 1)!=0)//"!" never written
-        fprintf(fp, "%s", cmdline);//save cmd lines in history.txt
+    if(strncmp("!", cmdline, 1)!=0){//"!" never written
+        char* lastCmd;
+        fseek(fp, 0, SEEK_SET);//reset file cursor
+        while((fgets(lastCmd, MAXLINE, fp))!=NULL) {}//to EOF
+        fseek(fp, 0, SEEK_END);//move to EOF
+        if(strcmp(lastCmd, cmdline)!=0)//not repeated history
+            fprintf(fp, "%s", cmdline);
+        }//save cmd lines in history.txt
 	if (feof(stdin)){
         if(fclose(fp))
             printf("FILE CLOSE ERROR\n");
@@ -112,7 +117,13 @@ int builtin_command(char **argv)
                 }
             }
             fseek(fp, 0, SEEK_END);//move to EOF
-            fprintf(fp, "%s", tmpCmd);//save cmd lines in history.txt
+            
+            char* lastCmd;
+            fseek(fp, 0, SEEK_SET);//reset file cursor
+            while((fgets(lastCmd, MAXLINE, fp))!=NULL) {}//to EOF
+            fseek(fp, 0, SEEK_END);//move to EOF
+            if(strcmp(lastCmd, tmpCmd)!=0)//not repeated history
+                fprintf(fp, "%s", tmpCmd);//save cmd lines in history.txt
             if(foundFlag)   eval(tmpCmd);//run found execution
             return 1;
         }
