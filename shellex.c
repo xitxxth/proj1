@@ -100,8 +100,13 @@ int builtin_command(char **argv)
             return 1;       
         }
         else{
+            char tmpCmd[MAXLINE];//for the last cmd
+            int i=0;
             int num = atoi(argv[0]+1);
-            printf("%d\n", num);
+            fseek(fp, 0, SEEK_SET);//reset file cursor
+            while((fgets(tmpCmd, MAXLINE, fp))!=NULL && i<num) {}//to EOF
+            fseek(fp, 0, SEEK_END);//move to EOF
+            printf("target cmd is %s\n", tmpCmd);
             return 1;
         }
     }
