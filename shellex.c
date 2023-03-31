@@ -26,7 +26,7 @@ int main()
 	printf("> ");                   
 	fgets(cmdline, MAXLINE, stdin); 
     //user defined
-    if(strncmp("!!", cmdline, 2)!=0)//"!!" never written
+    if(strncmp("!", cmdline, 1)!=0)//"!" never written
         fprintf(fp, "%s", cmdline);//save cmd lines in history.txt
 	if (feof(stdin)){
         if(fclose(fp))
@@ -101,20 +101,21 @@ int builtin_command(char **argv)
         }
         else{
             char tmpCmd[MAXLINE];//for the last cmd
-            int i=0;
-            int num = atoi(argv[0]+1);
+            int num = atoi(argv[0]+1);//change string to num
+            int foundFlag=1;//found? YES 1, NO 0
             fseek(fp, 0, SEEK_SET);//reset file cursor
-            while((fgets(tmpCmd, MAXLINE, fp))!=NULL && i<num) {}//to EOF
+            for(int i=1; i<num; i++){
+                if(fgets(tmpCmd, MAXLINE, fp)==NULL){//not found
+                    printf("!%d: event not found", num);
+                    foundFlag=0;//flag off
+                    break;
+                }
+            }
             fseek(fp, 0, SEEK_END);//move to EOF
-            printf("target cmd is %s\n", tmpCmd);
+            if(foundFlag)   eval(tmpCmd);//run found execution
             return 1;
         }
     }
-    /*else if(!strcmp(*(argv[0]), "!")){
-
-    }*/
-
-
     return 0;                     /* Not a builtin command */
 }
 /* $end eval */
