@@ -104,14 +104,15 @@ int builtin_command(char **argv)
             int num = atoi(argv[0]+1);//change string to num
             int foundFlag=1;//found? YES 1, NO 0
             fseek(fp, 0, SEEK_SET);//reset file cursor
-            for(int i=1; i<num; i++){
+            for(int i=0; i<num; i++){
                 if(fgets(tmpCmd, MAXLINE, fp)==NULL){//not found
-                    printf("!%d: event not found", num);
+                    printf("-bash: !%d: event not found\n", num);
                     foundFlag=0;//flag off
                     break;
                 }
             }
             fseek(fp, 0, SEEK_END);//move to EOF
+            fprintf(fp, "%s", tmpCmd);//save cmd lines in history.txt
             if(foundFlag)   eval(tmpCmd);//run found execution
             return 1;
         }
