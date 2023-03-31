@@ -100,8 +100,7 @@ int builtin_command(char **argv)
             return 1;       
         }
         else{
-            *(argv[0]) = 0;
-            int num = atoi(argv[0]);
+            int num = atoi(argv[0]+1);
             printf("%d\n", num);
             return 1;
         }
