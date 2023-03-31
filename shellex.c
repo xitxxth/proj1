@@ -128,6 +128,17 @@ int builtin_command(char **argv)
             return 1;
         }
     }
+
+    if(strncmp("cd", argv[0], 2)==0){
+        if(argv[1]==NULL || *argv[1]=='~'){
+            chdir(getenv("HOME"));
+        }
+        else{
+            if(chdir(argv[1])==-1){
+                printf("No directory\n");
+            }
+        }
+    }
     return 0;                     /* Not a builtin command */
 }
 /* $end eval */
