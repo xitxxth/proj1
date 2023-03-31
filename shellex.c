@@ -26,7 +26,7 @@ int main()
 	fgets(cmdline, MAXLINE, stdin); 
     //user defined
     if(strncmp("!", cmdline, 1)!=0){//"!" never written
-        char* lastCmd;
+        char lastCmd[MAXLINE];
         fseek(fp, 0, SEEK_SET);//reset file cursor
         while((fgets(lastCmd, MAXLINE, fp))!=NULL) {}//to EOF
         fseek(fp, 0, SEEK_END);//move to EOF
@@ -118,7 +118,7 @@ int builtin_command(char **argv)
             }
             fseek(fp, 0, SEEK_END);//move to EOF
             
-            char* lastCmd;
+            char lastCmd[MAXLINE];
             fseek(fp, 0, SEEK_SET);//reset file cursor
             while((fgets(lastCmd, MAXLINE, fp))!=NULL) {}//to EOF
             fseek(fp, 0, SEEK_END);//move to EOF
