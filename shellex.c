@@ -89,7 +89,7 @@ int builtin_command(char **argv)
         fseek(fp, 0, SEEK_END);//move to EOF
         return 1;//pass execve
     }
-    if(strncmp(*(argv[0]), "!", 1)){//"!"
+    if(strncmp(argv[0], "!", 1)==0){//"!"
         if(!strcmp(argv[0], "!!")) {//"!!"
             char tmpCmd[MAXLINE];//for the last cmd
             fseek(fp, 0, SEEK_SET);//reset file cursor
