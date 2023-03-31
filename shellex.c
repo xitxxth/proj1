@@ -100,7 +100,9 @@ int builtin_command(char **argv)
             return 1;       
         }
         else{
-            printf("%c\n", *(argv[0]+1));
+            *(argv[0]) = 0;
+            int num = atoi(argv[0]);
+            printf("%d\n", num);
         }
     }
     /*else if(!strcmp(*(argv[0]), "!")){
