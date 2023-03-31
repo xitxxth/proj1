@@ -2,7 +2,11 @@
 #include "csapp.h"
 #include<errno.h>
 #define MAXARGS   128
-
+/*
+ssh;CSE20201604@cspro.sogang.ac.kr
+git;xitxxth
+Command without fork, exec (cd, history) is designed as built-in function.
+*/
 /* Function prototypes */
 void eval(char *cmdline);
 int parseline(char *buf, char **argv);
@@ -59,10 +63,18 @@ void eval(char *cmdline)
     if (argv[0] == NULL)  
 	return;   /* Ignore empty lines */
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
-        if (execve(argv[0], argv, environ) < 0) {	//ex) /bin/ls ls -al &
-            printf("%s: Command not found.\n", argv[0]);
+            if((pid = Fork())==0){//child
+            execve(argv[0], argv, environ);
             exit(0);
         }
+        else{
+            Wait();
+        }
+        /*if (execve(argv[0], argv, environ) < 0) {	//ex) /bin/ls ls -al &
+            printf("%s: Command not found.\n", argv[0]);
+            exit(0);*/
+        }
+
 
 	/* Parent waits for foreground job to terminate */
 	if (!bg){ 
@@ -129,15 +141,16 @@ int builtin_command(char **argv)
         }
     }
 
-    if(strncmp("cd", argv[0], 2)==0){
-        if(argv[1]==NULL || *argv[1]=='~'){
-            chdir(getenv("HOME"));
+    if(strncmp("cd", argv[0], 2)==0){//"cd"
+        if(argv[1]==NULL || *argv[1]=='~'){//cd, cd ~
+            chdir(getenv("HOME"));//cd home
         }
         else{
-            if(chdir(argv[1])==-1){
-                printf("No directory\n");
+            if(chdir(argv[1])==-1){//chdir failed
+                printf("No directory\n");//error message
             }
         }
+        return 1;
     }
     return 0;                     /* Not a builtin command */
 }
