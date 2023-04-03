@@ -73,11 +73,11 @@ void eval(char *cmdline)
 	return;   /* Ignore empty lines */
 
 
-    int idx = pipe_counter(argv);
-    for(int i=0; arr[i]>-1; i++){
-        printf("Saved in %d\n",arr[i]);
-    }
-    printf("cnt: %d\n", idx);
+    // int idx = pipe_counter(argv);
+    // for(int i=0; arr[i]>-1; i++){
+    //     printf("Saved in %d\n",arr[i]);
+    // }
+    // printf("cnt: %d\n", idx);
     //user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
@@ -86,7 +86,6 @@ void eval(char *cmdline)
         else{
             Wait(&status);
         }
-    
         }
 
 
