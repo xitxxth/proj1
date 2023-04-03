@@ -216,14 +216,14 @@ void pipe_handler(char** argv, int* arr)
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             if(pipe_flag){
-                dup2(fd[1], stdout);
+                dup2(fd[1], 1);
                 pipe_handler(argv, arr);
             }
             execve(argv[0], argv, environ);//execute and dead
         }
         else{
             if(pipe_flag){
-                dup2(fd[0], stdin);
+                dup2(fd[0], 0);
             }
             Waitpid(pid, &status, 0);
         }
