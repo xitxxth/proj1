@@ -13,8 +13,8 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-void pipe_handler(char **argv, int idx);
-int pipe_counter(char **argv, int *arr);
+//void pipe_handler(char **argv, int idx);
+//int pipe_counter(char **argv, int *arr);
 
 int main() 
 {
@@ -233,14 +233,14 @@ void pipe_handler(char** argv, int idx)
 }
 */
 
-int pipe_counter(char** argv)
-{   
-    int cnt=0, k=0;
-    for(int i=0; argv[i]; i++){
-        if(*(argv[i])=="|"){
-            cnt++;
-            arr[k++]=i;//arr[k] = | saved index
-        }
-    }
-    return cnt;
-}
+// int pipe_counter(char** argv)
+// {   
+//     int cnt=0, k=0;
+//     for(int i=0; argv[i]; i++){
+//         if(*(argv[i])=="|"){
+//             cnt++;
+//             arr[k++]=i;//arr[k] = | saved index
+//         }
+//     }
+//     return cnt;
+// }
