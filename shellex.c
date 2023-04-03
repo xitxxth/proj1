@@ -13,8 +13,8 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-//void pipe_handler(char **argv, int idx);
-//int pipe_counter(char **argv, int *arr);
+void pipe_handler(char **argv, int* arr, int idx);
+int pipe_counter(char **argv, int *arr, int idx);
 
 int main() 
 {
@@ -63,9 +63,10 @@ void eval(char *cmdline)
     pid_t pid;           /* Process id */
     //
     int status;//var for wait
-    //int pipe=0;//pipe flag, 0==off | 1==on
-    //int arr[MAXARGS];
-    //for(int i=0; i<MAXARGS; i++)    arr[i]=-1;
+    int pipe=0;//pipe flag, 0==off | 1==on
+    int arr[MAXARGS];
+    arr[0]=-1;
+    for(int i=1; i<MAXARGS; i++)    arr[i]=-2;
 
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
@@ -73,22 +74,18 @@ void eval(char *cmdline)
 	return;   /* Ignore empty lines */
 
 
-    // int idx = pipe_counter(argv);
-    // for(int i=0; arr[i]>-1; i++){
-    //     printf("Saved in %d\n",arr[i]);
-    // }
-    // printf("cnt: %d\n", idx);
-    //user defined execve
+    int idx = pipe_counter(argv, arr);
+    pipe_handler(argv, arr, idx);
+    /*user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            printf("fork!\n");
             execve(argv[0], argv, environ);//execute and dead
         }
         else{
-            printf("wait!\n");
             Wait(&status);
         }
-    }
+    
+        }*/
 
 
 	/* Parent waits for foreground job to terminate */
@@ -204,44 +201,45 @@ int parseline(char *buf, char **argv)
 /* $end parseline */
 
 //proto-funciton for 1 | 1 | 1 ...
-/*
-void pipe_handler(char** argv, int idx)
+
+void pipe_handler(char** argv, int* arr, int idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
+    printf("handler on! %d\n", idx);
     int fd[2];
-    pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
+    int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
-    // if(*(argv[idx+1])=='|'){
-    //     pipe_flag=1;
-    //     idx+=2;
-    // }
+    if(strcmp(argv[idx], "|")==0){
+        pipe_flag=1;
+        printf("pipe_flag on!\n");
+    }
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             if(pipe_flag){
-                dup2(fd[1], stdout);
-                pipe_handler(argv, idx);
+                dup2(fd[1], 1);
+                pipe_handler(argv, arr, idx-1);
             }
-            execve(argv[0], argv, environ);//execute and dead
+            execvp(argv[arr[idx]+1], argv);//execute and dead
         }
         else{
             if(pipe_flag){
-                dup2(fd[0], stdin);
+                dup2(fd[0], 0);
             }
-            Waitpid(pid, &status, 0);
+                Waitpid(pid, &status, 0);
         }
     }
 }
-*/
 
-// int pipe_counter(char** argv)
-// {   
-//     int cnt=0, k=0;
-//     for(int i=0; argv[i]; i++){
-//         if(*(argv[i])=="|"){
-//             cnt++;
-//             arr[k++]=i;//arr[k] = | saved index
-//         }
-//     }
-//     return cnt;
-// }
+
+int pipe_counter(char** argv, int* arr)
+{   
+    int cnt=0, k=1;
+    for(int i=0; argv[i]; i++){
+        if(strcmp(argv[i], "|")==0){
+            cnt++;
+            arr[k++]=i;//arr[k] = | saved index
+        }
+    }
+    return cnt;
+}
