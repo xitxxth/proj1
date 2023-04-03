@@ -100,14 +100,23 @@ void eval(char *cmdline)
 /* If first arg is a builtin command, run it and return true    */
 int builtin_command(char **argv) 
 {
+    int h=0;
+    printf("h%d\n", h);
     if (!strcmp(argv[0], "quit")) /* quit command */
 	exit(0);  
+
+        printf("h%d\n", h);
     if (!strcmp(argv[0], "&"))    /* Ignore singleton & */
 	return 1;
+
+        printf("h%d\n", h);
+
     //user defined history
     /*by making a txt file for keeping history data
     we can use the txt file again after quit my shell*/
     if(!strcmp(argv[0], "history")){//history doesn't call fork, exec so we deal with it as built-in
+
+        printf("h%d\n", h);
         char strHistory[MAXLINE];//history string
         int i=1;//index for history list from 1 to ...
         fseek(fp, 0, SEEK_SET);//reset file cursor
