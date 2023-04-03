@@ -66,7 +66,7 @@ void eval(char *cmdline)
     int pipe=0;//pipe flag, 0==off | 1==on
     int arr[MAXARGS];
     arr[0]=-1;
-    for(int i=1; i<MAXARGS; i++)    arr[i]=-1;
+    for(int i=1; i<MAXARGS; i++)    arr[i]=-2;
 
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
