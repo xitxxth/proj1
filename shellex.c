@@ -63,9 +63,9 @@ void eval(char *cmdline)
     pid_t pid;           /* Process id */
     //
     int status;//var for wait
-    int pipe=0;//pipe flag, 0==off | 1==on
-    int arr[MAXARGS];
-    for(int i=0; i<MAXARGS; i++)    arr[i]=-1;
+    //int pipe=0;//pipe flag, 0==off | 1==on
+    //int arr[MAXARGS];
+    //for(int i=0; i<MAXARGS; i++)    arr[i]=-1;
 
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
@@ -81,12 +81,14 @@ void eval(char *cmdline)
     //user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
+            printf("fork!\n");
             execve(argv[0], argv, environ);//execute and dead
         }
         else{
+            printf("wait!\n");
             Wait(&status);
         }
-        }
+    }
 
 
 	/* Parent waits for foreground job to terminate */
