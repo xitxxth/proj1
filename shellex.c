@@ -14,7 +14,7 @@ int builtin_command(char **argv);
 //User defined
 FILE* fp;
 void pipe_handler(char **argv, int* arr, int idx);
-int pipe_counter(char **argv, int *arr, int idx);
+int pipe_counter(char **argv, int *arr);
 
 int main() 
 {
@@ -195,7 +195,7 @@ int parseline(char *buf, char **argv)
     /* Should the job run in the background? */
     if ((bg = (*argv[argc-1] == '&')) != 0)
 	argv[--argc] = NULL;
-
+    printf("argc: %d\n");
     return bg;
 }
 /* $end parseline */
@@ -210,6 +210,9 @@ void pipe_handler(char** argv, int* arr, int idx)
     pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
+    //char* parsedArgv[MAXARGS];//parsed argv
+
+
     if(strcmp(argv[idx], "|")==0){
         pipe_flag=1;
         printf("pipe_flag on!\n");
