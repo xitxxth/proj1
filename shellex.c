@@ -205,7 +205,7 @@ int parseline(char *buf, char **argv)
 
 void pipe_handler(char** argv, int* arr, int idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
-    printf("handler on! %d\n", idx);
+    printf("handler on! %d\n%s\n", arr[idx]+1, argv[arr[idx]+1]);
     int fd[2];
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     pid_t pid;           // Process id 
