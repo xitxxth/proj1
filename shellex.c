@@ -214,6 +214,13 @@ void pipe_handler(char** argv, int* arr, int idx)
     int status;
     int pipe_flag=0; //pipe flag, child exists!
     char* parsedArgv[4];//parsed argv
+    //debug line
+    for(int j=0; arr[j]!=-2; j++){
+        printf("arr[%d] is %d\n", j, arr[j]);
+    }
+    printf("idx is %d\n", idx);
+    //debug line
+
     int i;
     for(i=arr[idx]+1; argv[i]!=NULL && strcpy(argv[i], "|")!=0; i++)
         strcpy(parsedArgv[i], argv[i]);
