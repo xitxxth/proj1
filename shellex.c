@@ -205,12 +205,16 @@ int parseline(char *buf, char **argv)
 
 void pipe_handler(char** argv, int* arr, int idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
+    printf("handler on! %d\n", idx);
     int fd[2];
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
-    if(strcmp(argv[idx], "|")==0)   pipe_flag=1;
+    if(strcmp(argv[idx], "|")==0){
+        pipe_flag=1;
+        printf("pipe_flag on!\n");
+    }
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             if(pipe_flag){
@@ -222,8 +226,8 @@ void pipe_handler(char** argv, int* arr, int idx)
         else{
             if(pipe_flag){
                 dup2(fd[0], 0);
-            Waitpid(pid, &status, 0);
             }
+                Waitpid(pid, &status, 0);
         }
     }
 }
