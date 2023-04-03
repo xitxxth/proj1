@@ -222,8 +222,10 @@ void pipe_handler(char** argv, int* arr, int idx)
     //debug line
 
     int i, j=0;
-    for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++)
+    for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++){
+        printf("i, j is %d\n", i, j);
         strcpy(parsedArgv[j], argv[i]);
+    }
     for(; j<4; j++)
         parsedArgv[j]=NULL;
     for(i=0; parsedArgv[i]; i++){
