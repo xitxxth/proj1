@@ -241,10 +241,13 @@ void pipe_handler(char** argv, int* arr, int idx)
     for(i=0; parsedArgv[i]; i++){
         printf("Pargv[%d]: %s\n", i, parsedArgv[i]);
     }
+    if(idx!=0){
     if(strcmp(argv[arr[idx]], "|")==0){
         pipe_flag=1;
         printf("pipe_flag on!\n");
+    }//problem!
     }
+    printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             printf("forked!\n");
