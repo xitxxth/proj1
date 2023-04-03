@@ -78,7 +78,7 @@ void eval(char *cmdline)
         printf("Saved in %d\n",arr[i]);
     }
     printf("cnt: %d\n", idx);
-    user defined execve
+    //user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             execve(argv[0], argv, environ);//execute and dead
