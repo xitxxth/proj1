@@ -236,19 +236,23 @@ void pipe_handler(char** argv, int* arr, int idx)
         pipe_flag=1;
         printf("pipe_flag on!\n");
     }
-    if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
+    if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
+            printf("forked!\n");
             if(pipe_flag){
                 dup2(fd[1], 1);
                 pipe_handler(argv, arr, idx-1);
             }
             execvp(parsedArgv[0], parsedArgv);//execute and dead
+            printf("executed!\n");
         }
         else{
             if(pipe_flag){
                 dup2(fd[0], 0);
             }
+            printf("waiting..\n");
                 Waitpid(pid, &status, 0);
+            printf("killed\n");
         }
     }
 }
