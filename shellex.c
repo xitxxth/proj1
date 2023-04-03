@@ -230,7 +230,7 @@ void pipe_handler(char** argv, int* arr, int idx)
     for(; j<4; j++)
         parsedArgv[j]=NULL;
     for(i=0; parsedArgv[i]; i++){
-        printf("Pargv[i]: %s\n", parsedArgv[i]);
+        printf("Pargv[%d]: %s\n", i, parsedArgv[i]);
     }
     if(strcmp(argv[arr[idx]], "|")==0){
         pipe_flag=1;
@@ -242,7 +242,7 @@ void pipe_handler(char** argv, int* arr, int idx)
                 dup2(fd[1], 1);
                 pipe_handler(argv, arr, idx-1);
             }
-            execvp(argv[arr[idx]+1], argv);//execute and dead
+            execvp(parsedArgv[0], parsedArgv);//execute and dead
         }
         else{
             if(pipe_flag){
