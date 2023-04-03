@@ -13,7 +13,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-void pipe_handler(char **argv, int* arr);
+void pipe_handler(char **argv, int* arr, int idx);
 int pipe_counter(char **argv, int *arr);
 
 int main() 
@@ -75,10 +75,7 @@ void eval(char *cmdline)
 
 
     int idx = pipe_counter(argv, arr);
-    for(int i=0; arr[i]>-2; i++){
-        printf("Saved in %d\n",arr[i]);
-    }
-    printf("cnt: %d\n", idx);
+    pipe_handler(argv, arr, idx);
     /*user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
@@ -206,7 +203,7 @@ int parseline(char *buf, char **argv)
 
 //proto-funciton for 1 | 1 | 1 ...
 
-void pipe_handler(char** argv, int* arr)
+void pipe_handler(char** argv, int* arr, int idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     int fd[2];
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
@@ -217,9 +214,9 @@ void pipe_handler(char** argv, int* arr)
             if((pid = Fork())==0){//child
             if(pipe_flag){
                 dup2(fd[1], 1);
-                pipe_handler(argv, arr);
+                pipe_handler(argv, arr, idx-1);
             }
-            execve(argv[0], argv, environ);//execute and dead
+            execve(argv[arr[idx]+1], argv, environ);//execute and dead
         }
         else{
             if(pipe_flag){
@@ -233,7 +230,7 @@ void pipe_handler(char** argv, int* arr)
 
 int pipe_counter(char** argv, int* arr)
 {   
-    int cnt=1, k=1;
+    int cnt=0, k=1;
     for(int i=0; argv[i]; i++){
         if(strcmp(argv[i], "|")==0){
             cnt++;
