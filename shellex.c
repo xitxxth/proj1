@@ -13,7 +13,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-void pipe_handler(char **argv, int idx);
+void pipe_handler(char **argv, int* arr);
 int pipe_counter(char **argv, int *arr);
 
 int main() 
@@ -65,7 +65,8 @@ void eval(char *cmdline)
     int status;//var for wait
     int pipe=0;//pipe flag, 0==off | 1==on
     int arr[MAXARGS];
-    for(int i=0; i<MAXARGS; i++)    arr[i]=-1;
+    arr[0]=-1;
+    for(int i=1; i<MAXARGS; i++)    arr[i]=-1;
 
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
@@ -73,8 +74,8 @@ void eval(char *cmdline)
 	return;   /* Ignore empty lines */
 
 
-    int idx = pipe_counter(argv);
-    for(int i=0; arr[i]>-1; i++){
+    int idx = pipe_counter(argv, arr);
+    for(int i=0; arr[i]>-2; i++){
         printf("Saved in %d\n",arr[i]);
     }
     printf("cnt: %d\n", idx);
@@ -204,23 +205,19 @@ int parseline(char *buf, char **argv)
 /* $end parseline */
 
 //proto-funciton for 1 | 1 | 1 ...
-/*
-void pipe_handler(char** argv, int idx)
+
+void pipe_handler(char** argv, int* arr)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     int fd[2];
     pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
-    // if(*(argv[idx+1])=='|'){
-    //     pipe_flag=1;
-    //     idx+=2;
-    // }
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             if(pipe_flag){
                 dup2(fd[1], stdout);
-                pipe_handler(argv, idx);
+                pipe_handler(argv, arr);
             }
             execve(argv[0], argv, environ);//execute and dead
         }
@@ -232,12 +229,12 @@ void pipe_handler(char** argv, int idx)
         }
     }
 }
-*/
 
-int pipe_counter(char** argv)
+
+int pipe_counter(char** argv, int* arr)
 {   
     int cnt=0, k=0;
-    for(int i=0; argv[i]; i++){
+    for(int i=1; argv[i]; i++){
         if(*(argv[i])=="|"){
             cnt++;
             arr[k++]=i;//arr[k] = | saved index
