@@ -233,8 +233,8 @@ void pipe_handler(char** argv, int* arr)
 
 int pipe_counter(char** argv, int* arr)
 {   
-    int cnt=0, k=0;
-    for(int i=1; argv[i]; i++){
+    int cnt=1, k=1;
+    for(int i=0; argv[i]; i++){
         if(strcmp(argv[i], "|")==0){
             cnt++;
             arr[k++]=i;//arr[k] = | saved index
