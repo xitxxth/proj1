@@ -197,7 +197,7 @@ int parseline(char *buf, char **argv)
 	argv[--argc] = NULL;
 
     for(int i=0; argv[i]; i++){
-        printf("argv[i]: %s\n", argv[i]);
+        printf("argv[%d]: %s\n", i, argv[i]);
     }
     return bg;
 }
@@ -221,9 +221,9 @@ void pipe_handler(char** argv, int* arr, int idx)
     printf("idx is %d\n", idx);
     //debug line
 
-    int i;
-    for(i=arr[idx]+1; argv[i]!=NULL && strcpy(argv[i], "|")!=0; i++)
-        strcpy(parsedArgv[i], argv[i]);
+    int i, j=0;
+    for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++)
+        strcpy(parsedArgv[j], argv[i]);
     for(; i<4; i++)
         parsedArgv[i]=NULL;
     for(i=0; parsedArgv[i]; i++){
