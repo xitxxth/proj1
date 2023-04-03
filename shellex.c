@@ -209,7 +209,7 @@ int parseline(char *buf, char **argv)
 void pipe_handler(char** argv, int* arr)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     int fd[2];
-    pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
+    int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
@@ -235,7 +235,7 @@ int pipe_counter(char** argv, int* arr)
 {   
     int cnt=0, k=0;
     for(int i=1; argv[i]; i++){
-        if(*(argv[i])=="|"){
+        if(strcmp(argv[i], "|")==0){
             cnt++;
             arr[k++]=i;//arr[k] = | saved index
         }
