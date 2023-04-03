@@ -195,7 +195,10 @@ int parseline(char *buf, char **argv)
     /* Should the job run in the background? */
     if ((bg = (*argv[argc-1] == '&')) != 0)
 	argv[--argc] = NULL;
-    printf("argc: %d\n");
+
+    for(int i=0; argv[i]; i++){
+        printf("argv[i]: %s\n", argv[i]);
+    }
     return bg;
 }
 /* $end parseline */
@@ -210,7 +213,7 @@ void pipe_handler(char** argv, int* arr, int idx)
     pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
-    //char* parsedArgv[MAXARGS];//parsed argv
+    //char* parsedArgv[4];//parsed argv
 
 
     if(strcmp(argv[idx], "|")==0){
