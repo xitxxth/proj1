@@ -13,8 +13,6 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-void pipe_handler(char **argv, int* arr, int idx);
-int pipe_counter(char **argv, int *arr);
 
 int main() 
 {
@@ -35,12 +33,10 @@ int main()
         char lastCmd[MAXLINE];
         fseek(fp, 0, SEEK_SET);//reset file cursor
         while((fgets(lastCmd, MAXLINE, fp))!=NULL) {}//to EOF
+        fseek(fp, 0, SEEK_END);//move to EOF
         if(strcmp(lastCmd, cmdline)!=0)//not repeated history
             fprintf(fp, "%s", cmdline);
         }//save cmd lines in history.txt
-
-
-
 	if (feof(stdin)){
         if(fclose(fp))
             printf("FILE CLOSE ERROR\n");
@@ -61,32 +57,23 @@ void eval(char *cmdline)
     char buf[MAXLINE];   /* Holds modified command line */
     int bg;              /* Should the job run in bg or fg? */
     pid_t pid;           /* Process id */
-    //
-    int status;//var for wait
-    int pipe=0;//pipe flag, 0==off | 1==on
-    int arr[MAXARGS];
-    arr[0]=-1;
-    for(int i=1; i<MAXARGS; i++)    arr[i]=-2;
-
+    
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
     if (argv[0] == NULL)  
 	return;   /* Ignore empty lines */
-
-
-    int idx = pipe_counter(argv, arr);
-    pipe_handler(argv, arr, idx);
-    /*user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            execve(argv[0], argv, environ);//execute and dead
+            execve(argv[0], argv, environ);
+            exit(0);
         }
         else{
-            Wait(&status);
+            Wait();
         }
-
-    
-        }*/
+        /*if (execve(argv[0], argv, environ) < 0) {	//ex) /bin/ls ls -al &
+            printf("%s: Command not found.\n", argv[0]);
+            exit(0);*/
+        }
 
 
 	/* Parent waits for foreground job to terminate */
@@ -95,6 +82,7 @@ void eval(char *cmdline)
 	}
 	else//when there is backgrount process!
 	    printf("%d %s", pid, cmdline);
+    }
     return;
 }
 
@@ -123,6 +111,7 @@ int builtin_command(char **argv)
             char tmpCmd[MAXLINE];//for the last cmd
             fseek(fp, 0, SEEK_SET);//reset file cursor
             while((fgets(tmpCmd, MAXLINE, fp))!=NULL) {}//to EOF
+            fseek(fp, 0, SEEK_END);//move to EOF
             printf("last command is %s", tmpCmd);//print last cmd
             eval(tmpCmd);//execute it
             return 1;       
@@ -144,6 +133,7 @@ int builtin_command(char **argv)
             char lastCmd[MAXLINE];
             fseek(fp, 0, SEEK_SET);//reset file cursor
             while((fgets(lastCmd, MAXLINE, fp))!=NULL) {}//to EOF
+            fseek(fp, 0, SEEK_END);//move to EOF
             if(strcmp(lastCmd, tmpCmd)!=0)//not repeated history
                 fprintf(fp, "%s", tmpCmd);//save cmd lines in history.txt
             if(foundFlag)   eval(tmpCmd);//run found execution
@@ -153,8 +143,7 @@ int builtin_command(char **argv)
 
     if(strncmp("cd", argv[0], 2)==0){//"cd"
         if(argv[1]==NULL || *argv[1]=='~'){//cd, cd ~
-            int set = chdir(getenv("HOME"));//cd home
-            //var set has no role, mask warning message
+            chdir(getenv("HOME"));//cd home
         }
         else{
             if(chdir(argv[1])==-1){//chdir failed
@@ -200,50 +189,3 @@ int parseline(char *buf, char **argv)
     return bg;
 }
 /* $end parseline */
-
-//proto-funciton for 1 | 1 | 1 ...
-
-void pipe_handler(char** argv, int* arr, int idx)
-{// handle mine >> | exists? >> pass it >> done , idx starts from 1
-    printf("handler on! %d\n%s\n", arr[idx]+1, argv[arr[idx]+1]);
-    int fd[2];
-    int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
-    pid_t pid;           // Process id 
-    int status;
-    int pipe_flag=0; //pipe flag, child exists!
-    if(strcmp(argv[idx], "|")==0){
-        pipe_flag=1;
-        printf("pipe_flag on!\n");
-    }
-    printf("pipe flag: %d\n", pipe_flag);
-    if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
-            if((pid = Fork())==0){//child
-            if(pipe_flag){
-                dup2(fd[1], 1);
-                pipe_handler(argv, arr, idx-1);
-            }
-            printf("forked!\n");
-            execve(argv[arr[idx]+1], argv, environ);//execute and dead
-        }
-        else{
-            if(pipe_flag){
-                dup2(fd[0], 0);
-            }
-                printf("parent!\n");
-                Waitpid(pid, &status, 0);
-        }
-    }
-}
-
-
-int pipe_counter(char** argv, int* arr)
-{   
-    int cnt=0, k=1;
-    for(int i=0; argv[i]; i++){
-        if(strcmp(argv[i], "|")==0){
-            cnt++;
-            arr[k++]=i;//arr[k] = | saved index
-        }
-    }
-    return cnt;
-}
