@@ -210,6 +210,7 @@ void pipe_handler(char** argv, int* arr, int idx)
     pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
+    if(strcmp(argv[idx], "|")==0)   pipe_flag=1;
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             if(pipe_flag){
@@ -221,8 +222,8 @@ void pipe_handler(char** argv, int* arr, int idx)
         else{
             if(pipe_flag){
                 dup2(fd[0], 0);
-            }
             Waitpid(pid, &status, 0);
+            }
         }
     }
 }
