@@ -249,15 +249,17 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             //printf("forked!\n");
-            close(fd[0]);
             dup2(fd[1], 1);
+            close(fd[1]);
+            close(fd[0]);
             execvp(parsedArgv[0], parsedArgv);//execute and dead
             //printf("executed!\n");
         }
         else{
             if(pipe_flag){
-                close(fd[1]);
                 dup2(fd[0], 0);
+                close[fd[0]];
+                close(fd[1]);
                 pipe_handler(argv, arr, idx-1);
             }
             //printf("waiting..\n");
