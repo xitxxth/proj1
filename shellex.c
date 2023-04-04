@@ -257,7 +257,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
         }
         else{
             dup2(fd[0], 0);
-            close[fd[0]];
+            close(fd[0]);
             close(fd[1]);
             if(pipe_flag){
                 pipe_handler(argv, arr, idx-1);
