@@ -252,15 +252,13 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             close(fd[0]);
             dup2(fd[1], 1);
             execvp(parsedArgv[0], parsedArgv);//execute and dead
-            if(pipe_flag){
-                pipe_handler(argv, arr, idx-1);
-            }
             //printf("executed!\n");
         }
         else{
             if(pipe_flag){
                 close(fd[1]);
                 dup2(fd[0], 0);
+                pipe_handler(argv, arr, idx-1);
             }
             //printf("waiting..\n");
             Waitpid(pid, &status, 0);
