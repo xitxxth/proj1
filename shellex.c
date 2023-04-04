@@ -256,11 +256,14 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             //printf("executed!\n");
         }
         else{
+            dup2(fd[0], 0);
+            close[fd[0]];
+            close(fd[1]);
             if(pipe_flag){
-                dup2(fd[0], 0);
-                close[fd[0]];
-                close(fd[1]);
                 pipe_handler(argv, arr, idx-1);
+            }
+            else{
+                execvp(parsedArgv[0], parsedArgv);
             }
             //printf("waiting..\n");
             Waitpid(pid, &status, 0);
