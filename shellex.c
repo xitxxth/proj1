@@ -214,7 +214,7 @@ int parseline(char *buf, char **argv)
 
 pid_t pipe_handler(char** argv, int* arr, int idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
-    printf("handler on! %d\n", idx);
+    //printf("handler on! %d\n", idx);
     int fd[2];
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     pid_t pid;           // Process id 
@@ -223,48 +223,48 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
     char *parsedArgv[4];//parsed argv
     //debug line
     for(int j=0; arr[j]!=-2; j++){
-        printf("arr[%d] is %d\n", j, arr[j]);
+        //printf("arr[%d] is %d\n", j, arr[j]);
     }
-    printf("idx is %d\n", idx);
+    //printf("idx is %d\n", idx);
     //debug line
 
     int i, j=0;
     for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++){
-        printf("i, j is %d, %d\n", i, j);
+        //printf("i, j is %d, %d\n", i, j);
         parsedArgv[j] = argv[i];//strcpy(parsedArgv[j], argv[i]);
-        printf("copy!\n");
+        //printf("copy!\n");
     }
     for(; j<4; j++)
         parsedArgv[j]=NULL;
     for(i=0; parsedArgv[i]; i++){
-        printf("Pargv[%d]: %s\n", i, parsedArgv[i]);
+        //printf("Pargv[%d]: %s\n", i, parsedArgv[i]);
     }
     if(idx!=0){
     if(strcmp(argv[arr[idx]], "|")==0){
         pipe_flag=1;
-        printf("pipe_flag on!\n");
+        //printf("pipe_flag on!\n");
     }//problem!
     }
-    printf("pipe passed\n");
+    //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            printf("forked!\n");
+            //printf("forked!\n");
             if(pipe_flag){
                 pipe_handler(argv, arr, idx-1);
             }
             close(fd[0]);
             dup2(fd[1], 1);
             execvp(parsedArgv[0], parsedArgv);//execute and dead
-            printf("executed!\n");
+            //printf("executed!\n");
         }
         else{
             if(pipe_flag){
                 close(fd[1]);
                 dup2(fd[0], 0);
             }
-            printf("waiting..\n");
+            //printf("waiting..\n");
             Waitpid(pid, &status, 0);
-            printf("killed\n");
+            //printf("killed\n");
         }
     }
 }
