@@ -76,7 +76,7 @@ void eval(char *cmdline)
 
     int idx = pipe_counter(argv, arr);
     if((pid=Fork())==0){
-        pipe_handler(argv, arr, idx);
+        pipe_handler(argv, arr, 0);
     }
     else{
         Waitpid(pid, &status, 0);
@@ -239,12 +239,12 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
     for(i=0; parsedArgv[i]; i++){
         //printf("Pargv[%d]: %s\n", i, parsedArgv[i]);
     }
-    if(idx!=0){
-    if(strcmp(argv[arr[idx]], "|")==0){
+    
+    if(arr[idx+1] && arr[idx+1])>-1){
         pipe_flag=1;
         //printf("pipe_flag on!\n");
     }//problem!
-    }
+    
     //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
@@ -260,7 +260,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             close(fd[0]);
             close(fd[1]);
             if(pipe_flag){
-                pipe_handler(argv, arr, idx-1);
+                pipe_handler(argv, arr, idx+1);
             }
             else{
                 execvp(parsedArgv[0], parsedArgv);
@@ -278,8 +278,8 @@ int pipe_counter(char** argv, int* arr)
     int cnt=0, k=1;
     for(int i=0; argv[i]; i++){
         if(strcmp(argv[i], "|")==0){
-            cnt++;
-            arr[k++]=i;//arr[k] = | saved index
+            cnt++;//the number of |
+            arr[k++]=i;//arr[0]=-1, k>=1, arr[k] == kth | saved at ith (index)
         }
     }
     return cnt;
