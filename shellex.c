@@ -13,7 +13,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-void pipe_handler(char **argv, int* arr, int idx);
+pid_t pipe_handler(char **argv, int* arr, int idx);
 int pipe_counter(char **argv, int *arr);
 
 int main() 
@@ -75,7 +75,13 @@ void eval(char *cmdline)
 
 
     int idx = pipe_counter(argv, arr);
-    pipe_handler(argv, arr, idx);
+    if((pid=Fork())==0){
+        pipe_handler(argv, arr, idx);
+    }
+    else{
+        Waitpid(pid, &status, 0);
+    }
+    //pipe_handler(argv, arr, idx);
     /*user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
@@ -206,7 +212,7 @@ int parseline(char *buf, char **argv)
 
 //proto-funciton for 1 | 1 | 1 ...
 
-void pipe_handler(char** argv, int* arr, int idx)
+pid_t pipe_handler(char** argv, int* arr, int idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     printf("handler on! %d\n", idx);
     int fd[2];
