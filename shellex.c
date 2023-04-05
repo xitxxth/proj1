@@ -16,9 +16,16 @@ FILE* fp;
 pid_t pipe_handler(char **argv, int* arr, int idx);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
+void Sigchld_handler(int s);
+void SigInt_handler(int s);
+
 
 int main() 
 {
+    sigset_t mask, prev;
+    Signal(SIGCHLD, Sigchld_handler);
+    Signal(SIGINT, SigInt_handler);
+
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
     fp = fopen("history.txt", "a+t");//open history file if it exists or make a new history file
@@ -300,4 +307,19 @@ void Quote_Killer(char* cmdline)
     for(int i=0; cmdline[i]; i++){
         if(cmdline[i] == '"' || cmdline[i] == '\'')   cmdline[i] = ' ';
     }
+}
+
+void Sigint_handler(int s)
+{
+    int olderrno = errno;
+    //pid = Waitpid(-1, NULL, 0);
+    sioputs("SIGINT\n");
+    errno = olderrno;
+}
+
+void Sigchld_handler(int s)
+{
+    int olderrno = errno;
+    //pid = Waitpid(-1, NULL, 0);
+    errno = olderrno;
 }
