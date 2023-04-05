@@ -256,6 +256,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             close(fd[0]);
             if(execvp(parsedArgv[0], parsedArgv)<0) {
                 printf("%s:Command not found.\n", argv[0]);
+                exit(0);
             }
             
             //execute and dead
@@ -271,6 +272,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             else{
                 if(execvp(parsedArgv[0], parsedArgv)<0) {
                 printf("%s:Command not found.\n", argv[0]);
+                exit(0);
                 }
             }
             //printf("waiting..\n");
