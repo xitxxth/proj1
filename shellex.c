@@ -18,12 +18,24 @@ int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
 void Sigint_handler(int s);
-
+void Sigint_handler_parent(int s);
+void Sigtstp_handler(int s);
+void Sigtst_handler_parent(int s);
+typedef struct{
+    int bgPid[MAXARGS];
+    int bgSt[MAXARGS];
+    char *bgCmd[MAXARGS];
+} bgCon;
+bgCon bgCons[MAXARGS];
+int bgNum;
 
 int main() 
 {
     sigset_t mask, prev;
     Signal(SIGCHLD, Sigchld_handler);
+    Signal(SIGINT, Sigint_handler_parent);
+    Signal(SIGTSTP, Sigtstp_handler_parent);
+    bgNum=0;
 
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
@@ -78,12 +90,18 @@ void eval(char *cmdline)
 
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
+    if(bg){
+        bgCons->(bgCmd[bgNum]) = cmdline;
+        bgNum++;
+        bg=0;
+    }
     if (argv[0] == NULL)  
 	return;   /* Ignore empty lines */
 
 
     int idx = pipe_counter(argv, arr);
     if((pid=Fork())==0){
+        Signal(SIGTSTP, Sigtstp_handler);
         pipe_handler(argv, arr, 0);
     }
     else{
@@ -101,13 +119,6 @@ void eval(char *cmdline)
     
         }*/
 
-
-	/* Parent waits for foreground job to terminate */
-	if (!bg){ 
-	    int status;
-	}
-	else//when there is backgrount process!
-	    printf("%d %s", pid, cmdline);
     return;
 }
 
@@ -165,7 +176,7 @@ int builtin_command(char **argv)
         }
     }
 
-    if(strncmp("cd", argv[0], 2)==0){//"cd"
+    if(strcmp("cd", argv[0])==0){//"cd"
         if(argv[1]==NULL || *argv[1]=='~'){//cd, cd ~
             int set = chdir(getenv("HOME"));//cd home
             //var set has no role, mask warning message
@@ -176,6 +187,9 @@ int builtin_command(char **argv)
             }
         }
         return 1;
+    }
+    if(stcmp("jobs", argv[0])==0){
+        printf("%d\t%s\n", bgNum, bgCons->bgCmd);
     }
     return 0;                     /* Not a builtin command */
 }
@@ -309,6 +323,13 @@ void Quote_Killer(char* cmdline)
     }
 }
 
+void Sigchld_handler(int s)
+{
+    int olderrno = errno;
+    //pid = Waitpid(-1, NULL, 0);
+    errno = olderrno;
+}
+
 void Sigint_handler(int s)
 {
     int olderrno = errno;
@@ -325,9 +346,16 @@ void Sigint_handler_parent(int s)
     errno = olderrno;
 }
 
-void Sigchld_handler(int s)
+void Sigtstp_handler(int s)
 {
     int olderrno = errno;
-    //pid = Waitpid(-1, NULL, 0);
+    kill(0, SIGTSTP);
+    errno = olderrno;
+}
+
+void Sigtstp_handler_parent(int s)
+{
+    int olderrno = errno;
+    sio_puts("MAIN SIGTSTP\n");
     errno = olderrno;
 }
