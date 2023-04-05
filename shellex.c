@@ -193,7 +193,7 @@ int builtin_command(char **argv)
     }
     if(strcmp("jobs", argv[0])==0){
         for(int i=0; i<bgNum; i++)
-            printf("[%d]\t%s", i, bgCons->bgCmd);
+            printf("[%d]\t%s", i, bgCons[bgNum]->bgCmd);
         return 1;
     }
     return 0;                     /* Not a builtin command */
