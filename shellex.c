@@ -244,7 +244,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
         //printf("Pargv[%d]: %s\n", i, parsedArgv[i]);
     }
     
-    if(arr[idx+1] && arr[idx+1]=='|')>-1){
+    if(arr[idx+1] && arr[idx+1]>-1){
         pipe_flag=1;
         //printf("pipe_flag on!\n");
     }//problem!
@@ -292,6 +292,6 @@ int pipe_counter(char** argv, int* arr)
 void Quote_Killer(char* cmdline)
 {
     for(int i=0; cmdline[i]; i++){
-        if(cmdline[i] == '"')   cmdline[i] = ' ';
+        if(cmdline[i] == '"' || cmdline[i] == '\'')   cmdline[i] = ' ';
     }
 }
