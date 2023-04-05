@@ -17,7 +17,7 @@ pid_t pipe_handler(char **argv, int* arr, int idx);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
-void SigInt_handler(int s);
+void Sigint_handler(int s);
 
 
 int main() 
@@ -314,6 +314,7 @@ void Sigint_handler(int s)
     int olderrno = errno;
     //pid = Waitpid(-1, NULL, 0);
     sio_puts("SIGINT\n");
+    exit(0);
     errno = olderrno;
 }
 
