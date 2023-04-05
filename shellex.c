@@ -31,9 +31,7 @@ int main()
 	/* Read */
 	printf("> ");                   
 	fgets(cmdline, MAXLINE, stdin);
-    printf("before: %s", cmdline); 
     Quote_Killer(cmdline);
-    printf("after: %s", cmdline);
     //user defined
     if(strncmp("!", cmdline, 1)!=0){//"!" never written
         char lastCmd[MAXLINE];
@@ -256,7 +254,11 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             dup2(fd[1], 1);
             close(fd[1]);
             close(fd[0]);
-            execvp(parsedArgv[0], parsedArgv);//execute and dead
+            if(execvp(parsedArgv[0], parsedArgv)<0) {
+                printf("%s:Command not found.\n", argv[0]);
+            }
+            
+            //execute and dead
             //printf("executed!\n");
         }
         else{
@@ -267,7 +269,9 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
                 pipe_handler(argv, arr, idx+1);
             }
             else{
-                execvp(parsedArgv[0], parsedArgv);
+                if(execvp(parsedArgv[0], parsedArgv)<0) {
+                printf("%s:Command not found.\n", argv[0]);
+                }
             }
             //printf("waiting..\n");
             Waitpid(pid, &status, 0);
