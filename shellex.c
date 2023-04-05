@@ -20,11 +20,11 @@ void Sigchld_handler(int s);
 void Sigint_handler(int s);
 void Sigint_handler_parent(int s);
 void Sigtstp_handler(int s);
-void Sigtst_handler_parent(int s);
+void Sigtstp_handler_parent(int s);
 typedef struct{
     int bgPid[MAXARGS];
     int bgSt[MAXARGS];
-    char *bgCmd[MAXARGS];
+    char bgCmd[MAXARGS];
 } bgCon;
 bgCon bgCons[MAXARGS];
 int bgNum;
@@ -91,7 +91,7 @@ void eval(char *cmdline)
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
     if(bg){
-        bgCons->(bgCmd[bgNum]) = cmdline;
+        strcpy(bgCons->bgCmd[bgNum], cmdline);
         bgNum++;
         bg=0;
     }
@@ -188,7 +188,7 @@ int builtin_command(char **argv)
         }
         return 1;
     }
-    if(stcmp("jobs", argv[0])==0){
+    if(strcmp("jobs", argv[0])==0){
         printf("%d\t%s\n", bgNum, bgCons->bgCmd);
     }
     return 0;                     /* Not a builtin command */
