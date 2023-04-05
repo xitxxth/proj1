@@ -24,7 +24,6 @@ int main()
 {
     sigset_t mask, prev;
     Signal(SIGCHLD, Sigchld_handler);
-    Signal(SIGINT, SigInt_handler);
 
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
@@ -258,6 +257,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             //printf("forked!\n");
+            Signal(SIGINT, Sigint_handler);
             dup2(fd[1], 1);
             close(fd[1]);
             close(fd[0]);
