@@ -29,7 +29,10 @@ int main()
     while (1) {
 	/* Read */
 	printf("> ");                   
-	fgets(cmdline, MAXLINE, stdin); 
+	fgets(cmdline, MAXLINE, stdin);
+    printf("before: %s", cmdline); 
+    Quote_Killer(cmdline);
+    printf("after: %s", cmdline);
     //user defined
     if(strncmp("!", cmdline, 1)!=0){//"!" never written
         char lastCmd[MAXLINE];
@@ -281,6 +284,13 @@ int pipe_counter(char** argv, int* arr)
             cnt++;//the number of |
             arr[k++]=i;//arr[0]=-1, k>=1, arr[k] == kth | saved at ith (index)
         }
-    }
+    }   
     return cnt;
+}
+
+void Quote_Killer(char* cmdline)
+{
+    for(int i=0; cmdline[i]; i++){
+        if(cmdline[i] == '"')   cmdline[i] = ' ';
+    }
 }
