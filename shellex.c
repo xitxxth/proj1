@@ -318,6 +318,13 @@ void Sigint_handler(int s)
     errno = olderrno;
 }
 
+void Sigint_handler_parent(int s)
+{
+    int olderrno = errno;
+    sio_puts("MAIN SIGINT\n");
+    errno = olderrno;
+}
+
 void Sigchld_handler(int s)
 {
     int olderrno = errno;
