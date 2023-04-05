@@ -91,7 +91,7 @@ void eval(char *cmdline)
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
     if(bg){
-        strcpy(bgCons->bgCmd[bgNum], cmdline);
+        strcpy(bgCons[bgNum].bgCmd, cmdline);
         bgNum++;
         bg=0;
     }
@@ -189,7 +189,9 @@ int builtin_command(char **argv)
         return 1;
     }
     if(strcmp("jobs", argv[0])==0){
-        printf("%d\t%s\n", bgNum, bgCons->bgCmd);
+        for(int i=0; i<bgNum; i++)
+            printf("%d\t%s", bgNum, bgCons->bgCmd);
+        return 1;
     }
     return 0;                     /* Not a builtin command */
 }
