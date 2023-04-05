@@ -313,7 +313,7 @@ void Sigint_handler(int s)
 {
     int olderrno = errno;
     //pid = Waitpid(-1, NULL, 0);
-    sioputs("SIGINT\n");
+    sio_puts("SIGINT\n");
     errno = olderrno;
 }
 
