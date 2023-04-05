@@ -93,6 +93,7 @@ void eval(char *cmdline)
     if(bg){
         strcpy(bgCons[bgNum].bgCmd, cmdline);
         printf("copy: %s", bgCons[bgNum].bgCmd);
+        bgCons[bgNum].bgCmd[strlen(cmdline)]='\0';
         bgNum++;
         bg=0;
     }
@@ -193,7 +194,7 @@ int builtin_command(char **argv)
     }
     if(strcmp("jobs", argv[0])==0){
         for(int i=0; i<bgNum; i++)
-            printf("[%d]\t%s", i, bgCons[bgNum].bgCmd);
+            printf("[%d]\t%s", i, bgCons[i].bgCmd);
         return 1;
     }
     return 0;                     /* Not a builtin command */
