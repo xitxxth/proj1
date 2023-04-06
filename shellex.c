@@ -271,9 +271,9 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
                     exit(0);
             }
         }
-            close(*oldfd);
             close(fd[1]);
             *oldfd = fd[0];
+            if(idx!=0) close(*oldfd);
             if(pipe_flag){
                 pipe_handler(argv, arr, idx+1, oldfd);
             }
