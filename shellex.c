@@ -266,7 +266,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
     for(; j<4; j++)
         parsedArgv[j]=NULL;
     for(i=0; parsedArgv[i]; i++){
-        printf("idx:%d Pargv[%d]: %s\n", idx, i, parsedArgv[i]);
+        //printf("idx:%d Pargv[%d]: %s\n", idx, i, parsedArgv[i]);
     }
     
     if(arr[idx+1] && arr[idx+1]>-1){
@@ -279,7 +279,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             if((pid = Fork())==0){//child
             //printf("forked!\n");
             Signal(SIGINT, Sigint_handler);
-            printf("%d: %s is exectued!\n", pid, parsedArgv[0]);
+            //printf("%d: %s is exectued!\n", pid, parsedArgv[0]);
             if(pipe_flag){
                 dup2(fd[1], 1);
                 close(fd[1]);
@@ -311,7 +311,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             }
             //printf("waiting..\n");
             Waitpid(pid, &status, 0);
-            printf("killed %d\n", pid);
+            //printf("killed %d\n", pid);
         }
     }
 }
