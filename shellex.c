@@ -284,7 +284,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             if(pipe_flag){
                 dup2(fd[1], 1);
                 close(fd[1]);
-                close(fd[0]);
+               //close(fd[0]);
             }
             if(!pipe_flag){
                 if(execvp(parsedArgv[0], parsedArgv)<0) {
@@ -300,7 +300,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             oldfd = dup(0);
             dup2(fd[0], 0);
             close(fd[0]);
-            close(fd[1]);
+            //close(fd[1]);
             dup2(oldfd, 0);
             if(pipe_flag){
                 pipe_handler(argv, arr, idx+1);
