@@ -103,13 +103,13 @@ void eval(char *cmdline)
 
 
     int idx = pipe_counter(argv, arr);
-    if((pid=Fork())==0){
+    // if((pid=Fork())==0){
         Signal(SIGTSTP, Sigtstp_handler);
         pipe_handler(argv, arr, 0);
-    }
-    else{
-        Waitpid(pid, &status, 0);
-    }
+    // }
+    // else{
+    //     Waitpid(pid, &status, 0);
+    // }
     //pipe_handler(argv, arr, idx);
     /*user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
@@ -195,7 +195,7 @@ int builtin_command(char **argv)
     }
     if(strcmp("jobs", argv[0])==0){
         for(int i=0; i<bgNum; i++)
-            printf("[%d]\t%s", i, bgCons[i].bgCmd);
+            printf("[%d]\t%s\n", i, bgCons[i].bgCmd);
         return 1;
     }
     return 0;                     /* Not a builtin command */
@@ -297,12 +297,12 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             if(pipe_flag){
                 pipe_handler(argv, arr, idx+1);
             }
-            else{
-                if(execvp(parsedArgv[0], parsedArgv)<0) {
-                printf("%s:Command not found.\n", argv[0]);
-                exit(0);
-                }
-            }
+            // else{
+            //     if(execvp(parsedArgv[0], parsedArgv)<0) {
+            //     printf("%s:Command not found.\n", argv[0]);
+            //     exit(0);
+            //     }
+            // }
             //printf("waiting..\n");
             Waitpid(pid, &status, 0);
             //printf("killed\n");
