@@ -301,8 +301,8 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
                 pipe_handler(argv, arr, idx+1);
             }
             else{   
-                printf("%d: %s is exectued!!\n", pid, parsedArgv[0]);
-                if(execvp(parsedArgv[0], parsedArgv)<0) {
+                //printf("%d: %s is exectued!!\n", pid, parsedArgv[0]);
+                //if(execvp(parsedArgv[0], parsedArgv)<0) {
                 printf("%s:Command not found.\n", argv[0]);
                 return 0;
                 }
