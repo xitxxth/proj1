@@ -103,13 +103,13 @@ void eval(char *cmdline)
 
 
     int idx = pipe_counter(argv, arr);
-    if((pid=Fork())==0){
-        Signal(SIGTSTP, Sigtstp_handler);
+    // if((pid=Fork())==0){
+    //     Signal(SIGTSTP, Sigtstp_handler);
         pipe_handler(argv, arr, 0);
-    }
-    else{
-        Waitpid(pid, &status, 0);
-    }
+    // }
+    // else{
+    //     Waitpid(pid, &status, 0);
+    // }
     //pipe_handler(argv, arr, idx);
     /*user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
