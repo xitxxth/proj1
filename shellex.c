@@ -280,9 +280,11 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             //printf("forked!\n");
             Signal(SIGINT, Sigint_handler);
             printf("%d: %s is exectued!\n", pid, parsedArgv[0]);
-            dup2(fd[1], 1);
-            close(fd[1]);
-            close(fd[0]);
+            if(pipe_flag){
+                dup2(fd[1], 1);
+                close(fd[1]);
+                close(fd[0]);
+            }
             if(!pipe_flag){
                 if(execvp(parsedArgv[0], parsedArgv)<0) {
                     printf("%s:Command not found.\n", argv[0]);
