@@ -92,7 +92,7 @@ void eval(char *cmdline)
     bg = parseline(buf, argv); 
     if(bg){
         strcpy(bgCons[bgNum].bgCmd, cmdline);
-        printf("sizeof: %d\n", sizeof(cmdline));
+        printf("size: %d\n", strlen(cmdline));
         //bgCons[bgNum].bgCmd[sizeof(cmdline)-1]=' ';
         printf("copy: %s", bgCons[bgNum].bgCmd);
         bgNum++;
@@ -350,6 +350,7 @@ void Sigint_handler_parent(int s)
 {
     int olderrno = errno;
     sio_puts("MAIN SIGINT\n");
+    exit(0);
     errno = olderrno;
 }
 
