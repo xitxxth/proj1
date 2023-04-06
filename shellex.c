@@ -271,15 +271,16 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
                     exit(0);
             }
         }
-            close(oldfd);
+            close(*oldfd);
             close(fd[1]);
             *oldfd = fd[0];
             if(pipe_flag){
-                pipe_handler(argv, arr, idx+1, &oldfd);
+                pipe_handler(argv, arr, idx+1, oldfd);
             }
             else{
                 
             }
+        if(pid>0)   Waitpid(pid, &status, 0);
     }
 }
 
