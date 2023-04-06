@@ -92,7 +92,8 @@ void eval(char *cmdline)
     bg = parseline(buf, argv); 
     if(bg){
         strcpy(bgCons[bgNum].bgCmd, cmdline);
-        bgCons[bgNum].bgCmd[strlen(cmdline)-1]='\0';
+        printf("sizeof: %d\n", sizeof(cmdline));
+        //bgCons[bgNum].bgCmd[sizeof(cmdline)-1]=' ';
         printf("copy: %s", bgCons[bgNum].bgCmd);
         bgNum++;
         bg=0;
