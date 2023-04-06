@@ -91,7 +91,7 @@ void eval(char *cmdline)
     strcpy(buf, cmdline);
     bg = parseline(buf, argv); 
     if(bg){
-        for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = '';
+        for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' ';
         strcpy(bgCons[bgNum].bgCmd, cmdline);
         //bgCons[bgNum].bgCmd[sizeof(cmdline)-1]=' ';
         printf("copy: %s", bgCons[bgNum].bgCmd);
@@ -282,6 +282,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             dup2(fd[1], 1);
             close(fd[1]);
             close(fd[0]);
+            printf("%s is exectued!\n" parsedArgv);
             if(execvp(parsedArgv[0], parsedArgv)<0) {
                 printf("%s:Command not found.\n", argv[0]);
                 exit(0);
@@ -298,6 +299,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
                 pipe_handler(argv, arr, idx+1);
             }
             else{
+                printf("%s is exectued!\n" parsedArgv);
                 if(execvp(parsedArgv[0], parsedArgv)<0) {
                 printf("%s:Command not found.\n", argv[0]);
                 exit(0);
