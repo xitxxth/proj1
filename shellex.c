@@ -13,7 +13,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-pid_t pipe_handler(char **argv, int* arr, int idx);
+pid_t pipe_handler(char **argv, int* arr, int idx, int oldfd);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
@@ -103,25 +103,8 @@ void eval(char *cmdline)
 
 
     int idx = pipe_counter(argv, arr);
-    // if((pid=Fork())==0){
-    //     Signal(SIGTSTP, Sigtstp_handler);
-        pipe_handler(argv, arr, 0);
-    // }
-    // else{
-    //     Waitpid(pid, &status, 0);
-    // }
-    //pipe_handler(argv, arr, idx);
-    /*user defined execve
-    if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
-            if((pid = Fork())==0){//child
-            execve(argv[0], argv, environ);//execute and dead
-        }
-        else{
-            Wait(&status);
-        }
-    
-        }*/
 
+    pipe_handler(argv, arr, 0, 0);
     return;
 }
 
@@ -241,11 +224,10 @@ int parseline(char *buf, char **argv)
 
 //proto-funciton for 1 | 1 | 1 ...
 
-pid_t pipe_handler(char** argv, int* arr, int idx)
+pid_t pipe_handler(char** argv, int* arr, int idx, int oldfd)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];
-    int oldfd;
     pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
@@ -278,44 +260,22 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
     //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            //printf("forked!\n");
-            Signal(SIGINT, Sigint_handler);
-            //printf("%d: %s is exectued!\n", pid, parsedArgv[0]);
-            if(pipe_flag){
-                dup2(fd[1], 1);
+            if(idx!=0 && oldfd != STDIN_FILENO)   dup2(oldfd, 0); //stdin-prev 
+            if(pipe_flag){ // 1, 2, 3, ... nth cmd
+                dup2(fd[1], 1);//stdout-pipe
                 close(fd[1]);
-               //close(fd[0]);
             }
-            if(!pipe_flag){
-                if(execvp(parsedArgv[0], parsedArgv)<0) {
+            if(execvp(parsedArgv[0], parsedArgv)<0) {
                     printf("%s:Command not found.\n", argv[0]);
                     exit(0);
-                }
             }
-            
-            //execute and dead
-            //printf("executed!\n");
         }
-        else{
-            oldfd = dup(0);
-            dup2(fd[0], 0);
-            close(fd[0]);
-            //close(fd[1]);
-            dup2(oldfd, 0);
+            close(oldfd);
+            close(fd[1]);
+            oldfd = fd[0];
             if(pipe_flag){
-                pipe_handler(argv, arr, idx+1);
+                pipe_handler(argv, arr, idx+1, oldfd);
             }
-            else{   
-                //printf("%d: %s is exectued!!\n", pid, parsedArgv[0]);
-                //if(execvp(parsedArgv[0], parsedArgv)<0) {
-                //printf("%s:Command not found.\n", argv[0]);
-                Waitpid(pid, &status, 0);
-                return 0;
-                //}
-            }
-            //printf("waiting..\n");
-            //printf("killed %d\n", pid);
-        }
     }
 }
 
