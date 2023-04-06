@@ -304,12 +304,12 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
                 printf("%d: %s is exectued!!\n", pid, parsedArgv[0]);
                 if(execvp(parsedArgv[0], parsedArgv)<0) {
                 printf("%s:Command not found.\n", argv[0]);
-                exit(0);
+                return 0;
                 }
             }
             //printf("waiting..\n");
             Waitpid(pid, &status, 0);
-            //printf("killed\n");
+            printf("killed %d\n", pid);
         }
     }
 }
