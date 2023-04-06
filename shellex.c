@@ -245,6 +245,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];
+    int oldfd;
     pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
@@ -296,9 +297,11 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             //printf("executed!\n");
         }
         else{
+            oldfd = dup(0);
             dup2(fd[0], 0);
             close(fd[0]);
             close(fd[1]);
+            dup2(oldfd, 0);
             if(pipe_flag){
                 pipe_handler(argv, arr, idx+1);
             }
