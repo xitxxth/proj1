@@ -103,13 +103,13 @@ void eval(char *cmdline)
 
 
     int idx = pipe_counter(argv, arr);
-    // if((pid=Fork())==0){
+    if((pid=Fork())==0){
         Signal(SIGTSTP, Sigtstp_handler);
         pipe_handler(argv, arr, 0);
-    // }
-    // else{
-    //     Waitpid(pid, &status, 0);
-    // }
+    }
+    else{
+        Waitpid(pid, &status, 0);
+    }
     //pipe_handler(argv, arr, idx);
     /*user defined execve
     if (!builtin_command(argv)) { //quit -> exit(0), & -> ignore, other -> run
@@ -266,7 +266,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
     for(; j<4; j++)
         parsedArgv[j]=NULL;
     for(i=0; parsedArgv[i]; i++){
-        //printf("Pargv[%d]: %s\n", i, parsedArgv[i]);
+        printf("idx:%d Pargv[%d]: %s\n", idx, i, parsedArgv[i]);
     }
     
     if(arr[idx+1] && arr[idx+1]>-1){
@@ -297,12 +297,12 @@ pid_t pipe_handler(char** argv, int* arr, int idx)
             if(pipe_flag){
                 pipe_handler(argv, arr, idx+1);
             }
-            // else{
-            //     if(execvp(parsedArgv[0], parsedArgv)<0) {
-            //     printf("%s:Command not found.\n", argv[0]);
-            //     exit(0);
-            //     }
-            // }
+            else{
+                if(execvp(parsedArgv[0], parsedArgv)<0) {
+                printf("%s:Command not found.\n", argv[0]);
+                exit(0);
+                }
+            }
             //printf("waiting..\n");
             Waitpid(pid, &status, 0);
             //printf("killed\n");
