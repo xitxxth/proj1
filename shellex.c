@@ -13,7 +13,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-pid_t pipe_handler(char **argv, int* arr, int idx, int oldfd);
+pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
@@ -83,7 +83,8 @@ void eval(char *cmdline)
     pid_t pid;           /* Process id */
     //
     int status;//var for wait
-    int pipe=0;//pipe flag, 0==off | 1==on
+    int pipe=0;//pipe flag, 0==off | 1==o
+    int oldfd=0;
     int arr[MAXARGS];
     arr[0]=-1;
     for(int i=1; i<MAXARGS; i++)    arr[i]=-2;
@@ -104,7 +105,7 @@ void eval(char *cmdline)
 
     int idx = pipe_counter(argv, arr);
 
-    pipe_handler(argv, arr, 0, 0);
+    pipe_handler(argv, arr, 0, &oldfd);
     return;
 }
 
@@ -224,7 +225,7 @@ int parseline(char *buf, char **argv)
 
 //proto-funciton for 1 | 1 | 1 ...
 
-pid_t pipe_handler(char** argv, int* arr, int idx, int oldfd)
+pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];
@@ -260,7 +261,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int oldfd)
     //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            if(idx!=0 && oldfd != STDIN_FILENO)   dup2(oldfd, 0); //stdin-prev 
+            if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
                 close(fd[1]);
@@ -272,9 +273,12 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int oldfd)
         }
             close(oldfd);
             close(fd[1]);
-            oldfd = fd[0];
+            *oldfd = fd[0];
             if(pipe_flag){
-                pipe_handler(argv, arr, idx+1, oldfd);
+                pipe_handler(argv, arr, idx+1, &oldfd);
+            }
+            else{
+                
             }
     }
 }
