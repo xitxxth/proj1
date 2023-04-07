@@ -176,7 +176,7 @@ int builtin_command(char **argv)
     }
     if(strcmp("jobs", argv[0])==0){
         for(int i=0; i<bgNum; i++){
-        if(strcmp("RUN", bgCons[i].bgCmd)==0 || strcmp("STOP", bgCons[i].bgCmd)==0)
+        if(strcmp("RUN", bgCons[i].bgSt)==0 || strcmp("STOP", bgCons[i].bgSt)==0)
             printf("[%d]\t%s", i, bgCons[i].bgCmd);
         }
         return 1;
