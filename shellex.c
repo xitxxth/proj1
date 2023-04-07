@@ -23,7 +23,7 @@ void Sigint_handler(int s);
 void Sigtstp_handler(int s);
 typedef struct{
     pid_t bgPid;
-    int bgSt;
+    sig_atomic_t bgSt;
     char bgCmd[MAXARGS];
 } bgCon;
 pid_t fgPgid;
