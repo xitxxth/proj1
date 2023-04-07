@@ -29,7 +29,7 @@ typedef struct{
 pid_t fgPgid;
 bgCon bgCons[MAXARGS];
 int bgNum, currNum;
-void bgst_change(bgCon* bgCons, int idx);
+void bgst_change(bgCon* data, int idx);
 int main() 
 {
     sigset_t mask, prev;
@@ -344,7 +344,7 @@ void Sigtstp_handler(int s)
     errno = olderrno;
 }
 
-void bgst_change(bgCon* bgCons, int idx)
+void bgst_change(bgCon* data, int idx)
 {
-    bgCons->bgSt = (bgCons + 1) % 2;
+    bgCons->bgSt = (bgCons->bgSt + 1) % 2;
 }
