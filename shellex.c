@@ -34,7 +34,7 @@ int main()
     sigset_t mask, prev;
     Signal(SIGCHLD, Sigchld_handler);
     Signal(SIGINT, Sigint_handler_parent);
-    Signal(SIGTSTP, Sigtstp_handler_parent);
+    Signal(SIGTSTP, SIGIGN);
     bgNum=0;
     currNum=0;
     char cmdline[MAXLINE]; /* Command line */
