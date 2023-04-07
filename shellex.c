@@ -107,7 +107,7 @@ void eval(char *cmdline)
     }
     else{    
         fgPgid = pid;
-        Waitpid(pid, &status, 0);
+        Waitpid(pid, &status, WUNTRACED);
         printf("waitdone\n");
         no_wait=0;
     }//sigSTP이 입력되면 wnohang, 없이는 wait
@@ -351,7 +351,7 @@ void Sigtstp_handler(int s)
     printf("fg: %d\n", fgPgid);
     no_wait=1;
     Kill(-fgPgid, SIGSTOP);
-    riase(SIGCHLD);
+    Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
 }
