@@ -276,7 +276,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
     //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            Signal(SIGTSTP, Sigtstp_handler);
+            Signal(SIGTSTP, SIG_DFL);
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
@@ -290,10 +290,10 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
             if(idx!=0) close(*oldfd);
             close(fd[1]);
             *oldfd = fd[0];
+            if(pid>0)   Waitpid(pid, &status, 0);
             if(pipe_flag){
                 pipe_handler(argv, arr, idx+1, oldfd);
             }
-        if(pid>0)   Waitpid(pid, &status, 0);
     }
 }
 
