@@ -183,7 +183,6 @@ int builtin_command(char **argv)
     }
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        printf("tarIdx: %d\n", tarIdx);
         bgCons[tarIdx].bgSt ="RUN";
         kill(bgCons[tarIdx].bgPid, SIGCONT);
         return 1;
@@ -198,7 +197,7 @@ int builtin_command(char **argv)
     if(strcmp("kill", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         bgCons[tarIdx].bgSt ="KILLED";
-        kill(bgCons[tarIdx].bgPid, SIGKILL);
+        kill(bgCons[tarIdx].bgPid, SIGKILL);//done?
         return 1;
     }
     return 0;                     /* Not a builtin command */
@@ -345,12 +344,12 @@ void Sigint_handler_parent(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
+    raise(SIGTSTP);
     errno = olderrno;
 }
 
 void Sigtstp_handler_parent(int s)
 {
     int olderrno = errno;
-    kill(-1, SIGTSTP);
     errno = olderrno;
 }
