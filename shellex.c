@@ -279,6 +279,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
             if(idx==0){
                 pgid_job = getpid();//new leader of pg
                 fgPgid = pgid_job;
+                printf("pgid: %d\n", pgid_job);
             }
             Setpgid(0, pgid_job);//follow leader pg
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
@@ -341,6 +342,6 @@ void Sigtstp_handler(int s)
 {
     int olderrno = errno;
     printf("tstp handler called\n");
-    Kill(-fgPgid, SIGSTP);
+    Kill(-fgPgid, SIGSTOP);
     errno = olderrno;
 }
