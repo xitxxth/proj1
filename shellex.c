@@ -193,7 +193,6 @@ int builtin_command(char **argv)
         int tarIdx = atoi(argv[1]);
         printf("tar Idx: %d\n", tarIdx);
         bgCons[tarIdx].bgSt = 1;
-        printf("pid: %d\tst: %s\n", bgCons[tarIdx].bgPid, bgCons[tarIdx].bgSt);
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         return 1;
     }
@@ -207,7 +206,6 @@ int builtin_command(char **argv)
     }
     if(strcmp("kill", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        strcpy(bgCons[tarIdx].bgSt, "KILLED");
         Kill(-(bgCons[tarIdx].bgPid), SIGKILL);//done?
         currNum--;
         return 1;
