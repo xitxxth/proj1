@@ -27,7 +27,7 @@ typedef struct{
     char bgCmd[MAXARGS];
 } bgCon;
 pid_t fgPgid;
-bgCon bgCons[MAXARGS];
+bgCon* bgCons;
 int bgNum, currNum;
 void bgst_change(bgCon data[], int idx);
 int main() 
@@ -38,6 +38,7 @@ int main()
     printf("main: %d\n", getpid());
     bgNum=0;
     currNum=0;
+    bgCons = (bgCon *)malloc(sizeof(bgCon)*MAXARGS);
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
     fp = fopen("history.txt", "a+t");//open history file if it exists or make a new history file
