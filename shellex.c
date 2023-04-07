@@ -13,19 +13,18 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd);
+pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
 void Sigint_handler(int s);
-void Sigint_handler_parent(int s);
 void Sigtstp_handler(int s);
-void Sigtstp_handler_parent(int s);
 typedef struct{
-    int bgPid;
+    pid_t bgPid;
     char *bgSt;
     char bgCmd[MAXARGS];
 } bgCon;
+pid_t fgPgid;
 bgCon bgCons[MAXARGS];
 int bgNum, currNum;
 
@@ -33,7 +32,7 @@ int main()
 {
     sigset_t mask, prev;
     Signal(SIGCHLD, Sigchld_handler);
-    Signal(SIGINT, Sigint_handler_parent);
+    Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, SIG_IGN);
     bgNum=0;
     currNum=0;
@@ -96,12 +95,12 @@ void eval(char *cmdline)
         bgCons[bgNum].bgSt = "RUN";
         bgNum++;
         currNum++;
-        bg=0;
     }
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
 
     int idx = pipe_counter(argv, arr);
-    pipe_handler(argv, arr, 0, &oldfd);
+    pipe_handler(argv, arr, 0, &oldfd, bg);
+    bg=0;
     return;
 }
 
@@ -240,11 +239,12 @@ int parseline(char *buf, char **argv)
 
 //proto-funciton for 1 | 1 | 1 ...
 
-pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
+pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];
     pid_t pid;           // Process id 
+    pid_t pgid_job;
     int status;
     int pipe_flag=0; //pipe flag, child exists!
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
@@ -276,7 +276,11 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
     //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            Signal(SIGTSTP, Sigtstp_handler);
+            if(idx==0){
+                pgid_job = getpid();//new leader of pg
+                fgPgid = pgid_job;
+            }
+            Setpgid(0, pgid_job);//follow leader pg
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
@@ -292,7 +296,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
             *oldfd = fd[0];
             if(pid>0)   Waitpid(pid, &status, 0);
             if(pipe_flag){
-                pipe_handler(argv, arr, idx+1, oldfd);
+                pipe_handler(argv, arr, idx+1, oldfd, bg);
             }
     }
 }
@@ -333,24 +337,9 @@ void Sigint_handler(int s)
     errno = olderrno;
 }
 
-void Sigint_handler_parent(int s)
-{
-    int olderrno = errno;
-    sio_puts("MAIN SIGINT\n");
-    exit(0);
-    errno = olderrno;
-}
-
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
-    printf("child called\n");
-    errno = olderrno;
-}
-
-void Sigtstp_handler_parent(int s)
-{
-    int olderrno = errno;
-    printf("parent called\n");
+    Kill(-fgPgid, SIGTSTP);
     errno = olderrno;
 }
