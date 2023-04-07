@@ -190,14 +190,14 @@ int builtin_command(char **argv)
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         printf("tar Idx: %d\n", tarIdx);
-        bgCons[tarIdx].bgSt ="RUN";
+        strcpy(bgCons[tarIdx].bgSt, "RUN");
         printf("pid: %d\tst: %s\n", bgCons[tarIdx].bgPid, bgCons[tarIdx].bgSt);
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        bgCons[tarIdx].bgSt ="FG";
+        strcpy(bgCons[tarIdx].bgSt, "FG");
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         Waitpid(bgCons[tarIdx].bgPid, &status, 0);
         currNum--;
@@ -205,7 +205,7 @@ int builtin_command(char **argv)
     }
     if(strcmp("kill", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        bgCons[tarIdx].bgSt ="KILLED";
+        strcpy(bgCons[tarIdx].bgSt, "KILLED");
         Kill(-(bgCons[tarIdx].bgPid), SIGKILL);//done?
         currNum--;
         return 1;
@@ -298,7 +298,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
         }
             if(idx!=0) close(*oldfd);
             close(fd[1]);
-            *oldfd = fd[0];
+            *oldfd = fd[0]; 
             if(pid>0)   Waitpid(pid, &status, 0);
             if(pipe_flag){
                 pipe_handler(argv, arr, idx+1, oldfd, bg);
