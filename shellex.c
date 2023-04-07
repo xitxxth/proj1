@@ -22,7 +22,7 @@ void Sigint_handler_parent(int s);
 void Sigtstp_handler(int s);
 void Sigtstp_handler_parent(int s);
 typedef struct{
-    int bgPid[MAXARGS];
+    int bgPid;
     int bgSt[MAXARGS];
     char bgCmd[MAXARGS];
 } bgCon;
@@ -59,8 +59,6 @@ int main()
             fprintf(fp, "%s", cmdline);
         }//save cmd lines in history.txt
 
-
-
 	if (feof(stdin)){
         if(fclose(fp))
             printf("FILE CLOSE ERROR\n");
@@ -81,7 +79,7 @@ void eval(char *cmdline)
     char buf[MAXLINE];   /* Holds modified command line */
     int bg;              /* Should the job run in bg or fg? */
     pid_t pid;           /* Process id */
-    //
+
     int status;//var for wait
     int pipe=0;//pipe flag, 0==off | 1==o
     int oldfd=0;
@@ -99,12 +97,9 @@ void eval(char *cmdline)
         currNum++;
         bg=0;
     }
-    if (argv[0] == NULL)  
-	return;   /* Ignore empty lines */
-
+    if (argv[0] == NULL)    return;   /* Ignore empty lines */
 
     int idx = pipe_counter(argv, arr);
-
     pipe_handler(argv, arr, 0, &oldfd);
     return;
 }
@@ -112,6 +107,7 @@ void eval(char *cmdline)
 /* If first arg is a builtin command, run it and return true    */
 int builtin_command(char **argv) 
 {
+    int status;
     if (!strcmp(argv[0], "quit")){ /* quit command */
 	printf("out\n");
     exit(0);
@@ -172,7 +168,7 @@ int builtin_command(char **argv)
         }
         else{
             if(chdir(argv[1])==-1){//chdir failed
-                printf("No directory\n");//error message
+                printf("No directory\n");//error messageS
             }
         }
         return 1;
@@ -236,9 +232,6 @@ int parseline(char *buf, char **argv)
     if ((bg = (*argv[argc-1] == '&')) != 0)
 	argv[--argc] = NULL;
 
-    for(int i=0; argv[i]; i++){
-        int tPid = atoi(argv[1]);//  printf("argv[%d]: %s\n", i, argv[i]);
-    }
     return bg;
 }
 /* $end parseline */
