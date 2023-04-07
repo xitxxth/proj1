@@ -239,12 +239,11 @@ int parseline(char *buf, char **argv)
 
 //proto-funciton for 1 | 1 | 1 ...
 
-pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
+pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, pid_t pgid_job)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];
     pid_t pid;           // Process id 
-    pid_t pgid_job;
     int status;
     int pipe_flag=0; //pipe flag, child exists!
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
