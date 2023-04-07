@@ -13,7 +13,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg);
+pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, int pgid);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
@@ -99,7 +99,7 @@ void eval(char *cmdline)
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
 
     int idx = pipe_counter(argv, arr);
-    pipe_handler(argv, arr, 0, &oldfd, bg);
+    pipe_handler(argv, arr, 0, &oldfd, bg, 0);
     bg=0;
     return;
 }
@@ -295,7 +295,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
             *oldfd = fd[0];
             if(pid>0)   Waitpid(pid, &status, 0);
             if(pipe_flag){
-                pipe_handler(argv, arr, idx+1, oldfd, bg);
+                pipe_handler(argv, arr, idx+1, oldfd, bg, pgid_job);
             }
     }
 }
