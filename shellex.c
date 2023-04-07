@@ -32,9 +32,9 @@ int no_wait;
 int main() 
 {
     sigset_t mask, prev;
-    Signal(SIGCHLD, Sigchld_handler);
     Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, Sigtstp_handler);
+    printf("main: %d\n", getpid());
     bgNum=0;
     currNum=0;
     no_wait=0;
@@ -107,7 +107,10 @@ void eval(char *cmdline)
     }
     else{    
         fgPgid = pid;
-        Waitpid(pid, &status, 0);
+        Waitpid(pid, &status, WNOHANG);
+        if(!WIFSTOPPED(status)){
+            Waitpid(pid, &status, 0);
+        }
         no_wait=0;
     }//sigSTP이 입력되면 wnohang, 없이는 wait
     bg=0;
@@ -346,6 +349,7 @@ void Sigint_handler(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
+    printf("main2: %d\n", getpid());
     no_wait=1;
     Kill(-fgPgid, SIGSTOP);
     Kill(getpid() , SIGCHLD);
