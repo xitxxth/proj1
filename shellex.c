@@ -183,6 +183,7 @@ int builtin_command(char **argv)
     }
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
+        printf("tarIdx: %d\n", tarIdx);
         bgCons[tarIdx].bgSt ="RUN";
         kill(bgCons[tarIdx].bgPid, SIGCONT);
         return 1;
