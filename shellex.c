@@ -23,7 +23,7 @@ void Sigtstp_handler(int s);
 void Sigtstp_handler_parent(int s);
 typedef struct{
     int bgPid;
-    int bgSt[MAXARGS];
+    char *bgSt;
     char bgCmd[MAXARGS];
 } bgCon;
 bgCon bgCons[MAXARGS];
