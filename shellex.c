@@ -276,7 +276,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
     //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            //Signal(SIGTSTP, Sigtstp_handler);
+            Signal(SIGTSTP, Sigtstp_handler);
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
