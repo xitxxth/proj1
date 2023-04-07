@@ -353,7 +353,7 @@ void Sigtstp_handler(int s)
     printf("fg: %d\n", fgPgid);
     no_wait=1;
     Kill(-fgPgid, SIGSTOP);
-    Kill(getpid() , SIGCHLD);
+    riase(SIGCHLD);
     printf("\n");
     errno = olderrno;
 }
