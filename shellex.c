@@ -107,10 +107,8 @@ void eval(char *cmdline)
     }
     else{    
         fgPgid = pid;
-        Waitpid(pid, &status, WNOHANG);
-        if(!WIFSTOPPED(status)){
-            Waitpid(pid, &status, 0);
-        }
+        Waitpid(pid, &status, 0);
+        printf("waitdone\n");
         no_wait=0;
     }//sigSTP이 입력되면 wnohang, 없이는 wait
     bg=0;
