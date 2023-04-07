@@ -304,6 +304,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
                 pipe_handler(argv, arr, idx+1, oldfd, bg);
             }
     }
+    no_wait=1;
     exit(0);
 }
 
