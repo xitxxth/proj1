@@ -199,7 +199,7 @@ int builtin_command(char **argv)
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        bgst_change(bgCons, tarIdx);
+        bgst_change(&bgCons, tarIdx);
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         Waitpid(bgCons[tarIdx].bgPid, &status, WUNTRACED);
         currNum--;
