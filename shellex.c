@@ -33,7 +33,7 @@ int main()
     sigset_t mask, prev;
     Signal(SIGCHLD, Sigchld_handler);
     Signal(SIGINT, Sigint_handler);
-    Signal(SIGTSTP, SIG_IGN);
+    Signal(SIGTSTP, Sigtstp_handler);
     bgNum=0;
     currNum=0;
     char cmdline[MAXLINE]; /* Command line */
@@ -340,6 +340,7 @@ void Sigint_handler(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
+    printf("tstp handler called\n");
     Kill(-fgPgid, SIGTSTP);
     errno = olderrno;
 }
