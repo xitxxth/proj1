@@ -183,7 +183,7 @@ int builtin_command(char **argv)
     if(strcmp("jobs", argv[0])==0){
         for(int i=0; i<bgNum; i++){
         if(strcmp("RUN", bgCons[i].bgSt)==0 || strcmp("STOP", bgCons[i].bgSt)==0)
-            printf("[%d]\t%s\t%s", i, bgCons[i].bgSt);
+            printf("[%d]\t%s\n", i, bgCons[i].bgSt);
         }
         return 1;
     }
@@ -191,7 +191,7 @@ int builtin_command(char **argv)
         int tarIdx = atoi(argv[1]);
         printf("tar Idx: %d\n", tarIdx);
         bgCons[tarIdx].bgSt ="RUN";
-        printf("st: %s\n", bgCons[tarIdx].bgSt);
+        printf("pid: %d\tst: %s\n", bgCons[tarIdx].bgPid, bgCons[tarIdx].bgSt);
         Kill(bgCons[tarIdx].bgPid, SIGCONT);
         return 1;
     }
