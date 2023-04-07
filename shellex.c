@@ -284,6 +284,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
                 dup2(fd[1], 1);//stdout-pipe
                 close(fd[1]);
             }
+            printf("pgrp: %d\n", Getpgrp());
             if(execvp(parsedArgv[0], parsedArgv)<0) {
                     printf("%s:Command not found.\n", argv[0]);
                     exit(0);
