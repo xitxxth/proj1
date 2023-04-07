@@ -34,7 +34,7 @@ int main()
     sigset_t mask, prev;
     Signal(SIGCHLD, Sigchld_handler);
     Signal(SIGINT, Sigint_handler_parent);
-    Signal(SIGTSTP, Sigtstp_handler_parent);
+    Signal(SIGTSTP, Sigtstp_handler);
     bgNum=0;
 
     char cmdline[MAXLINE]; /* Command line */
@@ -261,6 +261,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
     //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
+            //Signal(SIGTSTP, Sigtstp_handler);
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
@@ -276,9 +277,6 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd)
             *oldfd = fd[0];
             if(pipe_flag){
                 pipe_handler(argv, arr, idx+1, oldfd);
-            }
-            else{
-                
             }
         if(pid>0)   Waitpid(pid, &status, 0);
     }
@@ -331,13 +329,12 @@ void Sigint_handler_parent(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
-    kill(0, SIGTSTP);
     errno = olderrno;
 }
 
 void Sigtstp_handler_parent(int s)
 {
     int olderrno = errno;
-    sio_puts("MAIN SIGTSTP\n");
+    kill(-1, SIGTSTP);
     errno = olderrno;
 }
