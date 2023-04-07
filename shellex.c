@@ -346,5 +346,5 @@ void Sigtstp_handler(int s)
 
 void bgst_change(bgCon* bgCons, int idx)
 {
-    bgCons[idx].bgSt = (bgCons[idx].bgSt + 1) % 2;
+    bgCons->bgSt = (bgCons + 1) % 2;
 }
