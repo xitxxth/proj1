@@ -99,8 +99,10 @@ void eval(char *cmdline)
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
 
     int idx = pipe_counter(argv, arr);
-    if((pid=Fork())==0)
+    if((pid=Fork())==0){
+        Setpgid(0, getpid());
         pipe_handler(argv, arr, 0, &oldfd, bg);
+    }
     else    
         Waitpid(pid, &status, 0);
     
