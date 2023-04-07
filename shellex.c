@@ -99,7 +99,11 @@ void eval(char *cmdline)
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
 
     int idx = pipe_counter(argv, arr);
-    pipe_handler(argv, arr, 0, &oldfd, bg);
+    if((pid=Fork())==0)
+        pipe_handler(argv, arr, 0, &oldfd, bg);
+    else    
+        Waitpid(pid, &status, 0);
+    
     bg=0;
     return;
 }
