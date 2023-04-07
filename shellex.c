@@ -104,9 +104,8 @@ void eval(char *cmdline)
         pipe_handler(argv, arr, 0, &oldfd, bg);
     }
     else{    
-        fgPgid = getpid();
-        printf("fgset: %d\n", fgPgid);
-        Waitpid(pid, &status, 0);
+        fgPgid = pid;
+        Waitpid(pid, &status, WNOHANG);
     }
     bg=0;
     return;
