@@ -29,7 +29,7 @@ typedef struct{
 pid_t fgPgid;
 bgCon bgCons[MAXARGS];
 int bgNum, currNum;
-void bgst_change(bgCon* data, int idx);
+void bgst_change(bgCon data[], int idx);
 int main() 
 {
     sigset_t mask, prev;
@@ -199,7 +199,7 @@ int builtin_command(char **argv)
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        bgst_change(&bgCons, tarIdx);
+        bgst_change(bgCons, tarIdx);
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         Waitpid(bgCons[tarIdx].bgPid, &status, WUNTRACED);
         currNum--;
@@ -344,7 +344,7 @@ void Sigtstp_handler(int s)
     errno = olderrno;
 }
 
-void bgst_change(bgCon* data, int idx)
+void bgst_change(bgCon data[], int idx)
 {
-    (*bgCons)[idx].bgSt = ((*bgCons)[idx].bgSt + 1 ) %2;
+    data[idx].bgSt = (data[idx].bgSt + 1) % 2;
 }
