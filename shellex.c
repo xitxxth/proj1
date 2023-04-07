@@ -187,6 +187,7 @@ int builtin_command(char **argv)
             printf("[%d]\t", i);
             if(bgCons[i].bgSt == 0) printf("STOP\n");
             if(bgCons[i].bgSt == 1) printf("RUN\n");
+        }
         return 1;
     }
     if(strcmp("bg", argv[0])==0){
@@ -213,7 +214,6 @@ int builtin_command(char **argv)
     return 0;                     /* Not a builtin command */
 }
 /* $end eval */
-}
 /* $begin parseline */
 /* parseline - Parse the command line and build the argv array */
 int parseline(char *buf, char **argv) 
