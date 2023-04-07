@@ -93,7 +93,7 @@ void eval(char *cmdline)
         for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' ';
         if(currNum==0)  bgNum=0;
         strcpy(bgCons[bgNum].bgCmd, cmdline);
-        strcpy(bgCons[bgNum].bgSt, "RUN");
+        bgCons[bgNum].bgSt = "RUN";
         bgNum++;
         currNum++;
         bg=0;
