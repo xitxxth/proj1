@@ -169,6 +169,7 @@ int builtin_command(char **argv)
             return 1;
         }
     }
+}
 
     if(strcmp("cd", argv[0])==0){//"cd"
         if(argv[1]==NULL || *argv[1]=='~'){//cd, cd ~
@@ -261,31 +262,17 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
     int pipe_flag=0; //pipe flag, child exists!
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     char *parsedArgv[4];//parsed argv
-    //debug line
-    for(int j=0; arr[j]!=-2; j++){
-        //printf("arr[%d] is %d\n", j, arr[j]);
-    }
-    //printf("idx is %d\n", idx);
-    //debug line
 
     int i, j=0;
     for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++){
-        //printf("i, j is %d, %d\n", i, j);
         parsedArgv[j] = argv[i];//strcpy(parsedArgv[j], argv[i]);
-        //printf("copy!\n");
     }
     for(; j<4; j++)
         parsedArgv[j]=NULL;
-    for(i=0; parsedArgv[i]; i++){
-        //printf("idx:%d Pargv[%d]: %s\n", idx, i, parsedArgv[i]);
-    }
-    
     if(arr[idx+1] && arr[idx+1]>-1){
         pipe_flag=1;
-        //printf("pipe_flag on!\n");
     }//problem!
     
-    //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
