@@ -189,6 +189,7 @@ int builtin_command(char **argv)
     }
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
+        printf("tar Idx: %d\n", tarIdx);
         bgCons[tarIdx].bgSt ="RUN";
         Kill(bgCons[tarIdx].bgPid, SIGCONT);
         return 1;
@@ -198,12 +199,14 @@ int builtin_command(char **argv)
         bgCons[tarIdx].bgSt ="FG";
         Kill(bgCons[tarIdx].bgPid, SIGCONT);
         Waitpid(bgCons[tarIdx].bgPid, &status, 0);
+        currNum--;
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         bgCons[tarIdx].bgSt ="KILLED";
         Kill(bgCons[tarIdx].bgPid, SIGKILL);//done?
+        currNum--;
         return 1;
     }
     return 0;                     /* Not a builtin command */
