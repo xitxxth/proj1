@@ -341,6 +341,6 @@ void Sigtstp_handler(int s)
 {
     int olderrno = errno;
     printf("tstp handler called\n");
-    Kill(-fgPgid, SIGTSTP);
+    Kill(-fgPgid, SIGSTP);
     errno = olderrno;
 }
