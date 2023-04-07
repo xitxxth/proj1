@@ -23,13 +23,13 @@ void Sigint_handler(int s);
 void Sigtstp_handler(int s);
 typedef struct{
     pid_t bgPid;
-    sig_atomic_t bgSt;
+    int bgSt;
     char bgCmd[MAXARGS];
 } bgCon;
 pid_t fgPgid;
 bgCon bgCons[MAXARGS];
 int bgNum, currNum;
-
+void bgst_change(bgCon* bgCons, int idx);
 int main() 
 {
     sigset_t mask, prev;
@@ -193,15 +193,15 @@ int builtin_command(char **argv)
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         printf("tar Idx: %d\n", tarIdx);
-        bgCons[tarIdx].bgSt = 1;
+        bgst_change(&bgCons, tarIdx);
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        bgCons[tarIdx].bgSt = 1;
+        bgst_change(&bgCons, tarIdx);
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
-        Waitpid(bgCons[tarIdx].bgPid, &status, 0);
+        Waitpid(bgCons[tarIdx].bgPid, &status, WUNTRACED);
         currNum--;
         return 1;
     }
@@ -342,4 +342,9 @@ void Sigtstp_handler(int s)
     Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
+}
+
+void bgst_change(bgCon* bgCons, int idx)
+{
+    bgCons[idx].bgSt = (bgCons[idx].bgSt + 1) % 2;
 }
