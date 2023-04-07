@@ -13,7 +13,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, int pgid);
+pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, pid_t pgid_job);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
@@ -277,8 +277,8 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, pid_t pgi
             if((pid = Fork())==0){//child
             if(idx==0)  pgid_job = getpid();//new leader of pg
             fgPgid = pgid_job;
-            printf("pgid: %d\n", pgid_job);
             Setpgid(0, pgid_job);//follow leader pg
+            printf("pgid: %d\n", pgid_job);
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
@@ -294,6 +294,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, pid_t pgi
             *oldfd = fd[0];
             if(pid>0)   Waitpid(pid, &status, 0);
             if(pipe_flag){
+                if(idx==0)  pgid_job = pid;
                 pipe_handler(argv, arr, idx+1, oldfd, bg, pgid_job);
             }
     }
