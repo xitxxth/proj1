@@ -350,6 +350,7 @@ void Sigtstp_handler(int s)
 {
     int olderrno = errno;
     printf("main2: %d\n", getpid());
+    printf("fg: %d\n", fgPgid);
     no_wait=1;
     Kill(-fgPgid, SIGSTOP);
     Kill(getpid() , SIGCHLD);
