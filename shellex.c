@@ -342,6 +342,7 @@ void Sigint_handler(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
+    printf("fg: %d\n", fgPgid);
     Kill(-fgPgid, SIGSTOP);
     errno = olderrno;
 }
