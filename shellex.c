@@ -27,7 +27,6 @@ typedef struct{
 pid_t fgPgid;
 bgCon bgCons[MAXARGS];
 int bgNum, currNum;
-int no_wait;
 
 int main() 
 {
@@ -37,7 +36,6 @@ int main()
     printf("main: %d\n", getpid());
     bgNum=0;
     currNum=0;
-    no_wait=0;
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
     fp = fopen("history.txt", "a+t");//open history file if it exists or make a new history file
@@ -108,8 +106,6 @@ void eval(char *cmdline)
     else{    
         fgPgid = pid;
         Waitpid(pid, &status, WUNTRACED);
-        printf("waitdone\n");
-        no_wait=0;
     }//sigSTP이 입력되면 wnohang, 없이는 wait
     bg=0;
     return;
@@ -194,20 +190,20 @@ int builtin_command(char **argv)
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         bgCons[tarIdx].bgSt ="RUN";
-        kill(bgCons[tarIdx].bgPid, SIGCONT);
+        Kill(bgCons[tarIdx].bgPid, SIGCONT);
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         bgCons[tarIdx].bgSt ="FG";
-        kill(bgCons[tarIdx].bgPid, SIGCONT);
+        Kill(bgCons[tarIdx].bgPid, SIGCONT);
         Waitpid(bgCons[tarIdx].bgPid, &status, 0);
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         bgCons[tarIdx].bgSt ="KILLED";
-        kill(bgCons[tarIdx].bgPid, SIGKILL);//done?
+        Kill(bgCons[tarIdx].bgPid, SIGKILL);//done?
         return 1;
     }
     return 0;                     /* Not a builtin command */
@@ -304,7 +300,6 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
                 pipe_handler(argv, arr, idx+1, oldfd, bg);
             }
     }
-    no_wait=1;
     exit(0);
 }
 
@@ -349,8 +344,10 @@ void Sigtstp_handler(int s)
     int olderrno = errno;
     printf("main2: %d\n", getpid());
     printf("fg: %d\n", fgPgid);
-    no_wait=1;
     Kill(-fgPgid, SIGSTOP);
+    bgCons[bgNum].bgPid = fgPgid;
+    bgCons[bgNum].bgSt = "STOP";
+    bgNum++, currNum++;
     Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
