@@ -275,9 +275,11 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, pid_t pgi
     //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            if(idx==0)  pgid_job = getpid();//new leader of pg
-            fgPgid = pgid_job;
-            Setpgid(0, pgid_job);//follow leader pg
+            if(idx==0){
+                pgid_job = getpid();//new leader of pg
+                fgPgid = pgid_job;
+            }
+            Setpgid(getpid(), pgid_job);//follow leader pg
             printf("pgid: %d\n", pgid_job);
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
