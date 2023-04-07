@@ -101,6 +101,7 @@ void eval(char *cmdline)
     int idx = pipe_counter(argv, arr);
     if((pid=Fork())==0){
         fgPgid = getpid();
+        printf("fgset: %d\n", fgPgid);
         Setpgid(0, getpid());
         pipe_handler(argv, arr, 0, &oldfd, bg);
     }
