@@ -169,7 +169,6 @@ int builtin_command(char **argv)
             return 1;
         }
     }
-}
 
     if(strcmp("cd", argv[0])==0){//"cd"
         if(argv[1]==NULL || *argv[1]=='~'){//cd, cd ~
@@ -216,7 +215,7 @@ int builtin_command(char **argv)
     return 0;                     /* Not a builtin command */
 }
 /* $end eval */
-
+}
 /* $begin parseline */
 /* parseline - Parse the command line and build the argv array */
 int parseline(char *buf, char **argv) 
