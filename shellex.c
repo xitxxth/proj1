@@ -349,6 +349,7 @@ void Sigtstp_handler(int s)
     printf("main2: %d\n", getpid());
     printf("fg: %d\n", fgPgid);
     Kill(-fgPgid, SIGSTOP);
+    printf("bgNUM: %d\n", bgNum);
     bgCons[bgNum].bgPid = fgPgid;
     bgCons[bgNum].bgSt = "STOP";
     bgNum++, currNum++;
