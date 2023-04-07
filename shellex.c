@@ -27,6 +27,7 @@ typedef struct{
 pid_t fgPgid;
 bgCon bgCons[MAXARGS];
 int bgNum, currNum;
+int no_wait;
 
 int main() 
 {
@@ -36,6 +37,7 @@ int main()
     Signal(SIGTSTP, Sigtstp_handler);
     bgNum=0;
     currNum=0;
+    no_wait=0;
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
     fp = fopen("history.txt", "a+t");//open history file if it exists or make a new history file
@@ -105,7 +107,8 @@ void eval(char *cmdline)
     }
     else{    
         fgPgid = pid;
-        Waitpid(pid, &status, WNOHANG);
+        while(!no_wait)
+            Waitpid(pid, &status, WNOHANG);
     }
     bg=0;
     return;
@@ -342,6 +345,7 @@ void Sigint_handler(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
+    no_wait=1;
     Kill(-fgPgid, SIGSTOP);
     errno = olderrno;
 }
