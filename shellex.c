@@ -13,7 +13,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, pid_t pgid_job);
+pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
@@ -99,7 +99,7 @@ void eval(char *cmdline)
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
 
     int idx = pipe_counter(argv, arr);
-    pipe_handler(argv, arr, 0, &oldfd, bg, 0);
+    pipe_handler(argv, arr, 0, &oldfd, bg);
     bg=0;
     return;
 }
@@ -239,7 +239,7 @@ int parseline(char *buf, char **argv)
 
 //proto-funciton for 1 | 1 | 1 ...
 
-pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, pid_t pgid_job)
+pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];
@@ -275,12 +275,6 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, pid_t pgi
     //printf("pipe passed\n");
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            if(idx==0){
-                pgid_job = getpid();//new leader of pg
-                fgPgid = pgid_job;
-            }
-            Setpgid(getpid(), pgid_job);//follow leader pg
-            printf("pgid: %d\n", pgid_job);
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
@@ -296,10 +290,10 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, pid_t pgi
             *oldfd = fd[0];
             if(pid>0)   Waitpid(pid, &status, 0);
             if(pipe_flag){
-                if(idx==0)  pgid_job = pid;
-                pipe_handler(argv, arr, idx+1, oldfd, bg, pgid_job);
+                pipe_handler(argv, arr, idx+1, oldfd, bg);
             }
     }
+    exit(0);
 }
 
 
@@ -341,7 +335,6 @@ void Sigint_handler(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
-    printf("tstp handler called\n");
     Kill(-fgPgid, SIGSTOP);
     errno = olderrno;
 }
