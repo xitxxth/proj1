@@ -27,16 +27,16 @@ typedef struct{
     char bgCmd[MAXARGS];
 } bgCon;
 bgCon bgCons[MAXARGS];
-int bgNum;
+int bgNum, currNum;
 
 int main() 
 {
     sigset_t mask, prev;
     Signal(SIGCHLD, Sigchld_handler);
     Signal(SIGINT, Sigint_handler_parent);
-    Signal(SIGTSTP, Sigtstp_handler);
+    Signal(SIGTSTP, Sigtstp_handler_parent);
     bgNum=0;
-
+    currNum=0;
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
     fp = fopen("history.txt", "a+t");//open history file if it exists or make a new history file
@@ -93,10 +93,10 @@ void eval(char *cmdline)
     bg = parseline(buf, argv); 
     if(bg){
         for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' ';
+        if(currNum==0)  bgNum=0;
         strcpy(bgCons[bgNum].bgCmd, cmdline);
-        //bgCons[bgNum].bgCmd[sizeof(cmdline)-1]=' ';
-        printf("copy: %s", bgCons[bgNum].bgCmd);
         bgNum++;
+        currNum++;
         bg=0;
     }
     if (argv[0] == NULL)  
@@ -179,7 +179,27 @@ int builtin_command(char **argv)
     }
     if(strcmp("jobs", argv[0])==0){
         for(int i=0; i<bgNum; i++)
-            printf("[%d]\t%s\n", i, bgCons[i].bgCmd);
+        if(strcmp("RUN", bgCons[i].bgCmd)==0 || strcmp("STOP", bgCons[i].bgCmd)==0)
+            printf("[%d]\t%s", i, bgCons[i].bgCmd);
+        return 1;
+    }
+    if(strcmp("bg", argv[0])==0){
+        int tarIdx = atoi(argv[1]);
+        bgCons[tarIdx].bgSt ="RUN";
+        kill(bgCons[tarIdx].bgPid, SIGCONT);
+        return 1;
+    }
+    if(strcmp("fg", argv[0])==0){
+        int tarIdx = atoi(argv[1]);
+        bgCons[tarIdx].bgSt ="FG";
+        kill(bgCons[tarIdx].bgPid, SIGCONT);
+        Waitpid(bgCons[tarIdx].bgPid, &status, 0);
+        return 1;
+    }
+    if(strcmp("kill", argv[0])==0){
+        int tarIdx = atoi(argv[1]);
+        bgCons[tarIdx].bgSt ="KILLED";
+        kill(bgCons[tarIdx].bgPid, SIGKILL);
         return 1;
     }
     return 0;                     /* Not a builtin command */
@@ -217,7 +237,7 @@ int parseline(char *buf, char **argv)
 	argv[--argc] = NULL;
 
     for(int i=0; argv[i]; i++){
-        //  printf("argv[%d]: %s\n", i, argv[i]);
+        int tPid = atoi(argv[1]);//  printf("argv[%d]: %s\n", i, argv[i]);
     }
     return bg;
 }
