@@ -2,6 +2,8 @@
 #include "csapp.h"
 #include<errno.h>
 #define MAXARGS   128
+#define RUN 1
+#define STOP 0
 /*
 ssh;CSE20201604@cspro.sogang.ac.kr
 git;xitxxth
@@ -21,7 +23,7 @@ void Sigint_handler(int s);
 void Sigtstp_handler(int s);
 typedef struct{
     pid_t bgPid;
-    char *bgSt;
+    int bgSt;
     char bgCmd[MAXARGS];
 } bgCon;
 pid_t fgPgid;
@@ -182,22 +184,22 @@ int builtin_command(char **argv)
     }
     if(strcmp("jobs", argv[0])==0){
         for(int i=0; i<bgNum; i++){
-        if(strcmp("RUN", bgCons[i].bgSt)==0 || strcmp("STOP", bgCons[i].bgSt)==0)
-            printf("[%d]\t%s\n", i, bgCons[i].bgSt);
-        }
+            printf("[%d]\t", i);
+            if(bgCons[i].bgSt == 0) printf("STOP\n");
+            if(bgCons[i].bgSt == 1) printf("RUN\n");
         return 1;
     }
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         printf("tar Idx: %d\n", tarIdx);
-        strcpy(bgCons[tarIdx].bgSt, "RUN");
+        bgCons[tarIdx].bgSt = 1;
         printf("pid: %d\tst: %s\n", bgCons[tarIdx].bgPid, bgCons[tarIdx].bgSt);
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        strcpy(bgCons[tarIdx].bgSt, "FG");
+        bgCons[tarIdx].bgSt = 1;
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         Waitpid(bgCons[tarIdx].bgPid, &status, 0);
         currNum--;
@@ -351,7 +353,7 @@ void Sigtstp_handler(int s)
     Kill(-fgPgid, SIGSTOP);
     printf("bgNUM: %d\n", bgNum);
     bgCons[bgNum].bgPid = fgPgid;
-    bgCons[bgNum].bgSt = "STOP";
+    bgCons[bgNum].bgSt = 0;
     bgNum++, currNum++;
     Kill(0, SIGCHLD);
     printf("\n");
