@@ -109,6 +109,7 @@ void eval(char *cmdline)
         fgPgid = pid;
         while(!no_wait)
             Waitpid(pid, &status, WNOHANG);
+        no_wait=0;
     }
     bg=0;
     return;
