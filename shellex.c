@@ -2,6 +2,7 @@
 #include "csapp.h"
 #include<errno.h>
 #define MAXARGS   128
+#define EMPTY -1
 #define RUN 1
 #define STOP 0
 /*
@@ -27,9 +28,15 @@ typedef struct{
     char bgCmd[MAXARGS];
 } bgCon;
 pid_t fgPgid;
-bgCon* bgCons;
+bgCon bgCons[16];
 int bgNum, currNum;
+void Init_job(bgCon* data)
+void Add_job(bgCon* data, pid_t pid, int state, char cmdline);
+void Print_job(bgCon* data);
 void bgst_change(bgCon* data, int idx);
+
+
+
 int main() 
 {
     sigset_t mask, prev;
@@ -38,7 +45,7 @@ int main()
     printf("main: %d\n", getpid());
     bgNum=0;
     currNum=0;
-    bgCons = (bgCon *)malloc(sizeof(bgCon)*MAXARGS);
+    Init_job(bgCons);
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
     fp = fopen("history.txt", "a+t");//open history file if it exists or make a new history file
@@ -90,17 +97,11 @@ void eval(char *cmdline)
     for(int i=1; i<MAXARGS; i++)    arr[i]=-2;
 
     strcpy(buf, cmdline);
-    bg = parseline(buf, argv); 
-    if(bg){
-        for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' ';
-        if(currNum==0)  bgNum=0;
-        strcpy(bgCons[bgNum].bgCmd, cmdline);
-        bgCons[bgNum].bgSt = 1;
-        bgNum++;
-        currNum++;
-    }
+    bg = parseline(buf, argv);
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
-
+    
+    for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' '; 
+    Add_job(bgCons, pid, 1, cmdline);
     int idx = pipe_counter(argv, arr);
     if((pid=Fork())==0){
         Setpgid(0, getpid());
@@ -184,11 +185,7 @@ int builtin_command(char **argv)
         return 1;
     }
     if(strcmp("jobs", argv[0])==0){
-        for(int i=0; i<bgNum; i++){
-            printf("[%d]\t", i);
-            if(bgCons[i].bgSt == 0) printf("STOP\n");
-            if(bgCons[i].bgSt == 1) printf("RUN\n");
-        }
+        Print_job(bgCons);
         return 1;
     }
     if(strcmp("bg", argv[0])==0){
@@ -343,4 +340,38 @@ void Sigtstp_handler(int s)
     Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
+}
+
+void Init_job(bgCon* data)
+{
+    for(int i=0; i<16; i++){
+        data[i].bgPid = 0;
+        data[i].bgSt = -1;
+    }
+}
+
+void Add_job(bgCon* data, pid_t pid, int state, char cmdline)
+{
+    int i;
+    for(i=0; i<16; i++){
+        if(data[i].bgSt == -1){
+            data[i].bgCmd = cmdline;
+            data[i].bgPid = pid;
+            data[i].bgSt = state;
+            return 0;
+        }
+    }
+    if(i==16){
+        printf("ADD JOB ERROR\n");
+        return 0;
+    }
+}
+
+void Print_job(bgCon* data)
+{
+    for(int i=0; i<16; i++){
+        if(data[i].bgSt != -1){
+            printf("pid: %d\tstatus: %d\t cmd: %s", data[i].bgPid, data[i].bgSt, data[i].bgCmd);
+        }
+    }
 }
