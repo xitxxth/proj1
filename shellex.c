@@ -35,8 +35,9 @@ int bgNum, currNum;
 void Init_job(bgCon* data);
 void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
 void Print_job(bgCon* data);
-void JobStatus_change(bgCon* data, int idx);
+void JobStatus_change(bgCon* data, int job_idx);
 void JobStatus_empty(bgCon* data, int job_idx);
+void Wait_job(bgCon* data, int job_idx);
 
 
 int main() 
@@ -186,17 +187,13 @@ int builtin_command(char **argv)
     }
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        printf("tar Idx: %d\n", tarIdx);
         JobStatus_change(bgCons, tarIdx);
-        //Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        bgCons[tarIdx].bgSt = ((bgCons[tarIdx].bgSt) + 1) % 2;
-        Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
-        Waitpid(bgCons[tarIdx].bgPid, &status, WUNTRACED);
-        currNum--;
+        JobStatus_change(bgCons, tarIdx);
+        Wait_job(bgCons, tarIdx);
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
@@ -377,9 +374,13 @@ void Print_job(bgCon* data)
     }
 }
 
-void JobStatus_change(bgCon* data, int idx)
+void JobStatus_change(bgCon* data, int job_idx)
 {
-    data[idx].bgSt = (data[idx].bgSt + 1) % 2;
+    for(int i=0; i<MAXPROCESS; i++){
+        if(data[i].job_idx == job_idx){
+            data[i].bgSt = 1;
+        }
+    }
 }
 
 void JobStatus_empty(bgCon* data, int job_idx)
@@ -392,4 +393,15 @@ void JobStatus_empty(bgCon* data, int job_idx)
     }
     bgNum--;
     currNum--;
+}
+
+void Wait_job(bgCon* data, int job_idx)
+{
+    int status;
+    for(int i=0; i<MAXPROCESS; i++){
+        if(data[i].job_idx == job_idx){
+            Signal(data[i].bgPid, SIGCONT);
+            Waitpid(data[i].bgPid, &status, WUNTRACED);
+        }
+    }
 }
