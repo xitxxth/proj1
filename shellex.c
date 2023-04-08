@@ -323,7 +323,7 @@ void Sigchld_handler(int s)
 {
     int status;
     int olderrno = errno;
-    Waitpid(-1, &status, WNOHANG);
+    Waitpid(-1, NULL, 0);
     errno = olderrno;
 }
 
