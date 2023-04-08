@@ -101,11 +101,11 @@ void eval(char *cmdline)
 
     strcpy(buf, cmdline);
     bg = parseline(buf, argv);
+    if(!bg) fgPgid = bgNum;
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
     
     for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' '; 
     int idx = pipe_counter(argv, arr);
-    if(!bg) fgPgid = bgNum;
     pipe_handler(argv, arr, 0, &oldfd, bg, cmdline);
     bg=0;
     return;
@@ -332,6 +332,7 @@ void Sigtstp_handler(int s)
     int olderrno = errno;
     for(int i=0; i<MAXPROCESS; i++){
         if(bgCons[i].job_idx == fgPgid){
+            printf("fgpgid: %d\n", fgPgid);
             bgCons[i].bgSt = 0;
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
