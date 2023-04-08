@@ -335,6 +335,7 @@ void Sigtstp_handler(int s)
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
     }
+    Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
 }
