@@ -279,7 +279,10 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmd
                     exit(0);
             }
         }
-            if(idx==0)  bgNum++;
+            if(idx==0){
+                bgNum++;
+                currNum++;
+            }
             if(idx!=0) close(*oldfd);
             close(fd[1]);
             *oldfd = fd[0]; 
@@ -290,6 +293,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmd
                 if(WIFEXITED(status)){
                     JobStatus_empty(bgCons, job_idx);
                     bgNum--;
+                    currNum--;
                 }
                 else if(WIFSTOPPED(status)){
                     JobStatus_stop(bgCons, job_idx);
@@ -323,7 +327,7 @@ void Sigchld_handler(int s)
 {
     int status;
     int olderrno = errno;
-    Waitpid(-1, NULL, 0);
+    //Waitpid(-1, NULL, 0);
     errno = olderrno;
 }
 
