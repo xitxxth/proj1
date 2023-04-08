@@ -108,10 +108,10 @@ void eval(char *cmdline)
         Add_job(bgCons, pid, 1, cmdline);
         pipe_handler(argv, arr, 0, &oldfd, bg);
     }
-    else{    
+        Add_job(bgCons, pid, 1, cmdline);
         fgPgid = pid;
         Waitpid(pid, &status, WUNTRACED);
-    }//sigSTP이 입력되면 wnohang, 없이는 wait
+        //sigSTP이 입력되면 wnohang, 없이는 wait
     bg=0;
     return;
 }
@@ -192,7 +192,7 @@ int builtin_command(char **argv)
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         printf("tar Idx: %d\n", tarIdx);
-        JobStatus_change(bgCosn, tarIdx);
+        JobStatus_change(bgCons, tarIdx);
         //Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         return 1;
     }
