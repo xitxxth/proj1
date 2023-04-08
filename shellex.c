@@ -106,8 +106,8 @@ void eval(char *cmdline)
     
     for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' '; 
     int idx = pipe_counter(argv, arr);
-    int job_idx = bgNum;
-    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, bgNum);
+    int job_idx = ++bgNum;
+    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, job_idx);
     JobStatus_empty(bgCons, job_idx);
     bg=0;
     return;
@@ -278,7 +278,6 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmd
                     exit(0);
             }
         }
-            if(idx==0)  bgNum++;
             if(idx!=0) close(*oldfd);
             close(fd[1]);
             *oldfd = fd[0]; 
