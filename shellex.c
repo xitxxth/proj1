@@ -40,6 +40,7 @@ void JobStatus_empty(bgCon* data, int job_idx);
 void Wait_job(bgCon* data, int job_idx);
 void JobStatus_stop(bgCon* data, int job_idx);
 void JobStatus_run(bgCon* data, int job_idx);
+void Run_job(bgCon* data, int job_idx);
 
 
 int main() 
@@ -48,6 +49,7 @@ int main()
     sigset_t mask, prev;
     Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, Sigtstp_handler);
+    Signal(SIGCHLD, Sigchld_handler);
     printf("main: %d\n", getpid());
     bgNum=-1;
     currNum=0;
@@ -189,7 +191,8 @@ int builtin_command(char **argv)
     }
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        JobStatus_change(bgCons, tarIdx);
+        JobStatus_run(bgCons, tarIdx);
+        Run_job(bgCons, tarIdx);
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
@@ -197,7 +200,7 @@ int builtin_command(char **argv)
         JobStatus_run(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
         JobStatus_stop(bgCons, tarIdx);
-        JobStatus_empty(bg Cons, tarIdx);
+        JobStatus_empty(bgCons, tarIdx);
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
@@ -288,6 +291,9 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmd
                     JobStatus_empty(bgCons, job_idx);
                     bgNum--;
                 }
+                else if(WIFSTOPPED(status)){
+                    JobStatus_stop(bgCons, job_idx);
+                }
             }
     }
     return 0;
@@ -315,8 +321,9 @@ void Quote_Killer(char* cmdline)
 
 void Sigchld_handler(int s)
 {
+    int status;
     int olderrno = errno;
-    //pid = Waitpid(-1, NULL, 0);
+    Waitpid(-1, &status, WNOHANG);
     errno = olderrno;
 }
 
@@ -424,6 +431,15 @@ void JobStatus_run(bgCon* data, int job_idx)
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
             data[i].bgSt = 1;
+        }
+    }
+}
+
+void Run_job(bgCon* data, int job_idx)
+{
+    for(int i=0; i<MAXPROCESS; i++){
+        if(data[i].job_idx == job_idx){
+            Kill(data[i].bgPid, SIGCONT);
         }
     }
 }
