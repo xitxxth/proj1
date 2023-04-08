@@ -193,6 +193,7 @@ int builtin_command(char **argv)
         int tarIdx = atoi(argv[1]);
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
+        printf(">");
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
@@ -404,7 +405,6 @@ void JobStatus_empty(bgCon* data, int job_idx)
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
             data[i].bgSt = -1;
-            data[i].bgPid = 0;
         }
     }
     currNum--;
