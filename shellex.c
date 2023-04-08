@@ -193,6 +193,7 @@ int builtin_command(char **argv)
         int tarIdx = atoi(argv[1]);
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
+        JobStatus_empty(bgCons, tarIdx);
         printf(">");
         return 1;
     }
