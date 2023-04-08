@@ -5,6 +5,7 @@
 #define EMPTY -1
 #define RUN 1
 #define STOP 0
+#define MAXPROCESS 128
 /*
 ssh;CSE20201604@cspro.sogang.ac.kr
 git;xitxxth
@@ -16,7 +17,7 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg);
+pid_t pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
@@ -24,11 +25,12 @@ void Sigint_handler(int s);
 void Sigtstp_handler(int s);
 typedef struct{
     pid_t bgPid;
+    int job_idx;
     int bgSt;
     char bgCmd[MAXARGS];
 } bgCon;
 pid_t fgPgid;
-bgCon bgCons[16];
+bgCon bgCons[MAXPROCESS];
 int bgNum, currNum;
 void Init_job(bgCon* data);
 void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
@@ -103,21 +105,8 @@ void eval(char *cmdline)
     
     for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' '; 
     int idx = pipe_counter(argv, arr);
-    if(strcmp("bg", argv[0])==0){
-        int tarIdx = atoi(argv[1]);
-        printf("tar Idx: %d\n", tarIdx);
-        JobStatus_change(bgCons, tarIdx);
-        //Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
-        return 1;
-    }
-    if((pid=Fork())==0){
-        Setpgid(0, getpid());
-        //pipe_handler(argv, arr, 0, &oldfd, bg);
-    }
-        Add_job(bgCons, pid, 1, cmdline);
-        fgPgid = pid;
-        //Waitpid(pid, &status, WUNTRACED);
-        //sigSTP이 입력되면 wnohang, 없이는 wait
+    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline);
+    bgNum++;
     bg=0;
     return;
 }
@@ -255,7 +244,7 @@ int parseline(char *buf, char **argv)
 
 //proto-funciton for 1 | 1 | 1 ...
 
-pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
+pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdline)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];
@@ -290,9 +279,10 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg)
             if(idx!=0) close(*oldfd);
             close(fd[1]);
             *oldfd = fd[0]; 
+            Add_job(bgCons, pid, 1, cmdline);
             if(pid>0)   Waitpid(pid, &status, 0);
             if(pipe_flag){
-                pipe_handler(argv, arr, idx+1, oldfd, bg);
+                pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline);
             }
     }
     exit(0);
@@ -351,24 +341,27 @@ void Sigtstp_handler(int s)
 
 void Init_job(bgCon* data)
 {
-    for(int i=0; i<16; i++){
+    for(int i=0; i<MAXPROCESS; i++){
         data[i].bgPid = 0;
         data[i].bgSt = -1;
+        data[i].job_idx = -1;
     }
 }
 
 void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
 {
     int i;
-    for(i=0; i<16; i++){
+    for(i=0; i<MAXPROCESS; i++){
         if(data[i].bgSt == -1){
             strcpy(data[i].bgCmd, cmdline);
             data[i].bgPid = pid;
             data[i].bgSt = state;
+            data[i].job_idx = bgNum;
+            currNum++;
             return;
         }
     }
-    if(i==16){
+    if(i==MAXPROCESS){
         printf("ADD JOB ERROR\n");
         return;
     }
@@ -376,9 +369,9 @@ void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
 
 void Print_job(bgCon* data)
 {
-    for(int i=0; i<16; i++){
+    for(int i=0; i<MAXPROCESS; i++){
         if(data[i].bgSt != -1){
-            printf("pid: %d\tstatus: %d\t cmd: %s", data[i].bgPid, data[i].bgSt, data[i].bgCmd);
+            printf("job_id: %d\tstatus: %d\t cmd: %s", data[i].job_idx, data[i].bgSt, data[i].bgCmd);
         }
     }
 }
