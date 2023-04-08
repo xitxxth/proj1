@@ -36,8 +36,7 @@ void Init_job(bgCon* data);
 void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
 void Print_job(bgCon* data);
 void JobStatus_change(bgCon* data, int idx);
-void JobStatus_empty(bgCon* data, int idx);
-
+void JobStatus_empty(bgCon* data, pid_t pid);
 
 
 int main() 
@@ -106,7 +105,6 @@ void eval(char *cmdline)
     for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' '; 
     int idx = pipe_counter(argv, arr);
     pipe_handler(argv, arr, 0, &oldfd, bg, cmdline);
-    bgNum++;
     bg=0;
     return;
 }
@@ -280,12 +278,15 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmd
             close(fd[1]);
             *oldfd = fd[0]; 
             Add_job(bgCons, pid, 1, cmdline);
-            if(pid>0)   Waitpid(pid, &status, 0);
-            if(pipe_flag){
-                pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline);
+            if(pid>0){
+                JobStatus_empty(bgCons, pid);
+                Waitpid(pid, &status, 0);
             }
+            if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline);
+            else    bgNum++;
+            
     }
-    exit(0);
+    return 0;
 }
 
 
@@ -381,7 +382,14 @@ void JobStatus_change(bgCon* data, int idx)
     data[idx].bgSt = (data[idx].bgSt + 1) % 2;
 }
 
-void JobStatus_empty(bgCon* data, int idx)
+void JobStatus_empty(bgCon* data, pid_t pid)
 {
-    data[idx].bgSt = -1;
+    for(int i=0; i<MAXPROCESS; i++){
+        if(data[i].bgPid == pid){
+            data[i].bgSt = -1;
+            bgNum--;
+            currNum--;
+            return;
+        }
+    }
 }
