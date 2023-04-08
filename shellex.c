@@ -38,6 +38,8 @@ void Print_job(bgCon* data);
 void JobStatus_change(bgCon* data, int job_idx);
 void JobStatus_empty(bgCon* data, int job_idx);
 void Wait_job(bgCon* data, int job_idx);
+void JobStatus_stop(bgCon* data, int job_idx);
+void JobStatus_run(bgCon* data, int job_idx);
 
 
 int main() 
@@ -192,8 +194,10 @@ int builtin_command(char **argv)
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        JobStatus_change(bgCons, tarIdx);
+        JobStatus_run(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
+        JobStatus_stop(bgCons, tarIdx);
+        JobStatus_empty(bg Cons, tarIdx);
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
@@ -282,6 +286,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmd
             else{
                 if(WIFEXITED(status)){
                     JobStatus_empty(bgCons, job_idx);
+                    bgNum--;
                 }
             }
     }
@@ -391,7 +396,6 @@ void JobStatus_empty(bgCon* data, int job_idx)
             data[i].bgPid = 0;
         }
     }
-    bgNum--;
     currNum--;
 }
 
@@ -400,8 +404,26 @@ void Wait_job(bgCon* data, int job_idx)
     int status;
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
-            Signal(data[i].bgPid, SIGCONT);
+            Kill(data[i].bgPid, SIGCONT);
             Waitpid(data[i].bgPid, &status, WUNTRACED);
+        }
+    }
+}
+
+void JobStatus_stop(bgCon* data, int job_idx)
+{
+    for(int i=0; i<MAXPROCESS; i++){
+        if(data[i].job_idx == job_idx){
+            data[i].bgSt = 0;
+        }
+    }
+}
+
+void JobStatus_run(bgCon* data, int job_idx)
+{
+    for(int i=0; i<MAXPROCESS; i++){
+        if(data[i].job_idx == job_idx){
+            data[i].bgSt = 1;
         }
     }
 }
