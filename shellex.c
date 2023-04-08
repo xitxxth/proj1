@@ -41,6 +41,7 @@ void JobStatus_empty(bgCon* data, pid_t pid);
 
 int main() 
 {
+    mainPid = getpid();
     sigset_t mask, prev;
     Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, Sigtstp_handler);
@@ -335,7 +336,7 @@ void Sigtstp_handler(int s)
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
     }
-    Kill(0, SIGCHLD);
+    Kill(getpid(), SIGCHLD);
     printf("\n");
     errno = olderrno;
 }
