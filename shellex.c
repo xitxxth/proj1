@@ -33,7 +33,8 @@ int bgNum, currNum;
 void Init_job(bgCon* data);
 void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
 void Print_job(bgCon* data);
-void bgst_change(bgCon* data, int idx);
+void JobStatus_change(bgCon* data, int idx);
+void JobStatus_empty(bgCon* data, int idx);
 
 
 
@@ -101,10 +102,10 @@ void eval(char *cmdline)
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
     
     for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' '; 
-    Add_job(bgCons, pid, 1, cmdline);
     int idx = pipe_counter(argv, arr);
     if((pid=Fork())==0){
         Setpgid(0, getpid());
+        Add_job(bgCons, pid, 1, cmdline);
         pipe_handler(argv, arr, 0, &oldfd, bg);
     }
     else{    
@@ -191,8 +192,8 @@ int builtin_command(char **argv)
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         printf("tar Idx: %d\n", tarIdx);
-        bgCons[tarIdx].bgSt = ((bgCons[tarIdx].bgSt) + 1) % 2;
-        Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
+        JobStatus_change(bgCosn, tarIdx);
+        //Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
@@ -355,7 +356,7 @@ void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
     int i;
     for(i=0; i<16; i++){
         if(data[i].bgSt == -1){
-            srtcpy(data[i].bgCmd, cmdline);
+            strcpy(data[i].bgCmd, cmdline);
             data[i].bgPid = pid;
             data[i].bgSt = state;
             return;
@@ -374,4 +375,14 @@ void Print_job(bgCon* data)
             printf("pid: %d\tstatus: %d\t cmd: %s", data[i].bgPid, data[i].bgSt, data[i].bgCmd);
         }
     }
+}
+
+void JobStatus_change(bgCon* data, int idx)
+{
+    data[idx].bgSt = (data[idx].bgSt + 1) % 2;
+}
+
+void JobStatus_empty(bgCon* data, int idx)
+{
+    data[idx].bgSt = -1;
 }
