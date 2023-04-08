@@ -194,13 +194,13 @@ int builtin_command(char **argv)
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         printf("tar Idx: %d\n", tarIdx);
-        bgst_change(bgCons, tarIdx);
+        bgCons[tarIdx].bgSt = ((bgCons[tarIdx].bgSt) + 1) % 2;
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        bgst_change(bgCons, tarIdx);
+        bgCons[tarIdx].bgSt = ((bgCons[tarIdx].bgSt) + 1) % 2;
         Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
         Waitpid(bgCons[tarIdx].bgPid, &status, WUNTRACED);
         currNum--;
@@ -343,13 +343,4 @@ void Sigtstp_handler(int s)
     Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
-}
-
-void bgst_change(bgCon* data, int idx)
-{
-    //data[idx].bgSt = (data[idx].bgSt + 1) % 2;
-    data[idx]->bgSt = (data[idx]->bgSt + 1) % 2;
-    printf("%d\n", data[idx]->bgSt);
-    data[idx].bgSt = (data[idx].bgSt + 1) % 2;
-    printf("%d\n", data[idx].bgSt);
 }
