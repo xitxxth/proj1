@@ -41,7 +41,7 @@ void JobStatus_empty(bgCon* data, pid_t pid);
 
 int main() 
 {
-    mainPid = getpid();
+    //mainPid = getpid();
     sigset_t mask, prev;
     Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, Sigtstp_handler);
@@ -281,7 +281,7 @@ pid_t pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmd
             *oldfd = fd[0]; 
             Add_job(bgCons, pid, 1, cmdline);
             if(pid>0){
-                Waitpid(pid, &status, 0);
+                Waitpid(pid, &status, WUNTRACED);
                 //JobStatus_empty(bgCons, pid);
             }
             if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline);
@@ -330,14 +330,14 @@ void Sigint_handler(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
+    printf("fgpgid: %d\n", fgPgid);
     for(int i=0; i<MAXPROCESS; i++){
         if(bgCons[i].job_idx == fgPgid){
-            printf("fgpgid: %d\n", fgPgid);
             bgCons[i].bgSt = 0;
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
     }
-    Kill(getpid(), SIGCHLD);
+    Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
 }
