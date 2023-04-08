@@ -101,12 +101,11 @@ void eval(char *cmdline)
 
     strcpy(buf, cmdline);
     bg = parseline(buf, argv);
-    if(!bg) fgPgid = bgNum;
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
-    
     for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' '; 
     int idx = pipe_counter(argv, arr);
     int job_idx = ++bgNum;
+    if(!bg) fgPgid = bgNum;
     pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, job_idx);
     JobStatus_empty(bgCons, job_idx);
     bg=0;
