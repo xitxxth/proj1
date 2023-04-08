@@ -103,14 +103,20 @@ void eval(char *cmdline)
     
     for(int i=0; i<strlen(cmdline); i++)    if(cmdline[i]=='&') cmdline[i] = ' '; 
     int idx = pipe_counter(argv, arr);
+    if(strcmp("bg", argv[0])==0){
+        int tarIdx = atoi(argv[1]);
+        printf("tar Idx: %d\n", tarIdx);
+        JobStatus_change(bgCons, tarIdx);
+        //Kill(-(bgCons[tarIdx].bgPid), SIGCONT);
+        return 1;
+    }
     if((pid=Fork())==0){
         Setpgid(0, getpid());
-        Add_job(bgCons, pid, 1, cmdline);
-        pipe_handler(argv, arr, 0, &oldfd, bg);
+        //pipe_handler(argv, arr, 0, &oldfd, bg);
     }
         Add_job(bgCons, pid, 1, cmdline);
         fgPgid = pid;
-        Waitpid(pid, &status, WUNTRACED);
+        //Waitpid(pid, &status, WUNTRACED);
         //sigSTP이 입력되면 wnohang, 없이는 wait
     bg=0;
     return;
