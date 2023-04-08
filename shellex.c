@@ -30,8 +30,8 @@ typedef struct{
 pid_t fgPgid;
 bgCon bgCons[16];
 int bgNum, currNum;
-void Init_job(bgCon* data)
-void Add_job(bgCon* data, pid_t pid, int state, char cmdline);
+void Init_job(bgCon* data);
+void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
 void Print_job(bgCon* data);
 void bgst_change(bgCon* data, int idx);
 
@@ -350,20 +350,20 @@ void Init_job(bgCon* data)
     }
 }
 
-void Add_job(bgCon* data, pid_t pid, int state, char cmdline)
+void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
 {
     int i;
     for(i=0; i<16; i++){
         if(data[i].bgSt == -1){
-            data[i].bgCmd = cmdline;
+            srtcpy(data[i].bgCmd, cmdline);
             data[i].bgPid = pid;
             data[i].bgSt = state;
-            return 0;
+            return;
         }
     }
     if(i==16){
         printf("ADD JOB ERROR\n");
-        return 0;
+        return;
     }
 }
 
