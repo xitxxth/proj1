@@ -213,8 +213,8 @@ int builtin_command(char **argv)
     }
     if(strcmp("kill", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        if(tarIDX == -9) {
-            int tmp = atoi(arbv[2]);
+        if(tarIdx == -9) {
+            int tmp = atoi(argv[2]);
             Kill_job_(bgCons, tmp);
             JobStatus_empty(bgCons, tarIdx);
         }
