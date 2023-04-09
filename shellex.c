@@ -43,6 +43,7 @@ void JobStatus_run(bgCon* data, int job_idx);
 void Run_job(bgCon* data, int job_idx);
 void Kill_job(bgCon* data, int job_idx);
 void pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx);
+void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx);
 void Kill_job_(bgCon* data, int job_idx);
 
 int main() 
