@@ -43,7 +43,7 @@ void JobStatus_run(bgCon* data, int job_idx);
 void Run_job(bgCon* data, int job_idx);
 void Kill_job(bgCon* data, int job_idx);
 void pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx);
-
+void Kill_job_(bgCon* data, int job_idx);
 
 int main() 
 {
@@ -213,8 +213,15 @@ int builtin_command(char **argv)
     }
     if(strcmp("kill", argv[0])==0){
         int tarIdx = atoi(argv[1]);
-        Kill_job(bgCons, tarIdx);
-        JobStatus_empty(bgCons, tarIdx);
+        if(tarIDX == -9) {
+            int tmp = atoi(arbv[2]);
+            Kill_job_(bgCons, tmp);
+            JobStatus_empty(bgCons, tarIdx);
+        }
+        else {
+            Kill_job(bgCons, tarIdx);
+            JobStatus_empty(bgCons, tarIdx);
+        }
         currNum--;
         return 1;
     }
@@ -516,6 +523,15 @@ void Kill_job(bgCon* data, int job_idx)
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
             Kill(data[i].bgPid, SIGTERM);
+        }
+    }
+}
+
+void Kill_job_(bgCon* data, int job_idx)
+{
+    for(int i=0; i<MAXPROCESS; i++){
+        if(data[i].job_idx == job_idx){
+            Kill(data[i].bgPid, SIGKILL);
         }
     }
 }
