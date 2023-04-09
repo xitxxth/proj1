@@ -114,9 +114,9 @@ void eval(char *cmdline)
     if(!bg) fgPgid = (bgNum+1);
     if(bg){
         printf("backswitch on!\n");
-
+        bg_pipe_handler(argv, arr, 0, &oldfd, bg ,cmdline, fgPgid);
     }
-    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, fgPgid);
+    else    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, fgPgid);
     //JobStatus_empty(bgCons, job_idx);
     bg=0;
     return;
@@ -297,7 +297,6 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
         }
             if(idx==0){
                 bgNum++;
-                currNum++;
             }
             if(idx!=0) close(*oldfd);
             close(fd[1]);
@@ -310,7 +309,6 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
                 if(WIFEXITED(status)){
                     JobStatus_empty(bgCons, job_idx);
                     bgNum--;
-                    currNum--;
                 }
                 else if(WIFSTOPPED(status)){
                     JobStatus_stop(bgCons, job_idx);
@@ -353,15 +351,22 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
         }
             if(idx==0){
                 bgNum++;
-                currNum++;
             }
             if(idx!=0) close(*oldfd);
             close(fd[1]);
             *oldfd = fd[0]; 
             Add_job(bgCons, pid, 1, cmdline);
+            //unblock
+            if(pid>0)   Waitpid(pid, &status, WNOHANG);
             if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);
             else{
-                JobStatus_empty(bgCons, job_idx);
+                if(WIFEXITED(status)){
+                    JobStatus_empty(bgCons, job_idx);
+                    bgNum--;
+                }
+                else if(WIFSTOPPED(status)){
+                    JobStatus_stop(bgCons, job_idx);
+                }
             }
     }
     return;
