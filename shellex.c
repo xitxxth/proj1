@@ -404,9 +404,15 @@ void Sigchld_handler(int s)
 void Sigint_handler(int s)
 {
     int olderrno = errno;
-    //pid = Waitpid(-1, NULL, 0);
-    sio_puts("SIGINT\n");
-    exit(0);
+    for(int i=0; i<MAXPROCESS; i++){
+        if(bgCons[i].job_idx == fgPgid){
+            bgCons[i].bgSt = -1;
+            bgCons[i].job_idx = -1;
+            Kill(bgCons[i].bgPid, SIGTERM);
+            currNum--;
+        }
+    }
+    printf("\n");
     errno = olderrno;
 }
 
