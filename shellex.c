@@ -403,7 +403,7 @@ void Sigtstp_handler(int s)
     for(int i=0; i<MAXPROCESS; i++){
         if(bgCons[i].job_idx == fgPgid){
             bgCons[i].bgSt = 0;
-            printf("job:%d\t Kill:%d\tcmd:%s\n", bgCons[i].job_idx, bgCons[i].bgPid, bgCons[i].bgCmd);
+            printf("job:%d\t Kill:%d\tcmd:%s", bgCons[i].job_idx, bgCons[i].bgPid, bgCons[i].bgCmd);
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
     }
@@ -467,6 +467,7 @@ void JobStatus_empty(bgCon* data, int job_idx)
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
             data[i].bgSt = -1;
+            data[i].job_idx = -1;
             currNum--;
         }
     }
