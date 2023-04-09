@@ -296,6 +296,7 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             close(fd[1]);
             *oldfd = fd[0]; 
             Add_job(bgCons, pid, 1, cmdline);
+            //unblock
             if(pid>0)   Waitpid(pid, &status, WUNTRACED);
             if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);
             else{
@@ -309,7 +310,7 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
                 }
             }
     }
-    return 0;
+    return;
 }
 
 void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx)
@@ -356,7 +357,7 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
                 JobStatus_empty(bgCons, job_idx);
             }
     }
-    return 0;
+    return;
 }
 
 
@@ -402,6 +403,7 @@ void Sigtstp_handler(int s)
     for(int i=0; i<MAXPROCESS; i++){
         if(bgCons[i].job_idx == fgPgid){
             bgCons[i].bgSt = 0;
+            printf("Kill: %d\n", bgCons[i].bgPid);
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
     }
