@@ -420,7 +420,7 @@ void Sigchld_handler(int s)
     int status;
     pid_t pid;
     int target = -1;
-    while(pid=waitpid(-1, &status, WNOHANG)>0){
+    while(pid=waitpid(-1, 0, WNOHANG)>0){
         printf("REAPED %d\n", pid);
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].bgPid == pid){
