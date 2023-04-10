@@ -396,6 +396,7 @@ void Sigchld_handler(int s)
 {
     int olderrno = errno;
     int status;
+    //printf("BGNUM: %d\n", bgNum);
     if(bgNum>0){
         Waitpid(-1, &status, WNOHANG);
         bgNum--;
@@ -424,10 +425,11 @@ void Sigtstp_handler(int s)
     for(int i=0; i<MAXPROCESS; i++){
         if(bgCons[i].job_idx == fgPgid){
             bgCons[i].bgSt = 0;
-            printf("job:%d\t Kill:%d\tcmd:%s", bgCons[i].job_idx, bgCons[i].bgPid, bgCons[i].bgCmd);
+            //printf("job:%d\t Kill:%d\tcmd:%s", bgCons[i].job_idx, bgCons[i].bgPid, bgCons[i].bgCmd);
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
     }
+    bgNum++;
     Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
