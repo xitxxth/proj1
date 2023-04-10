@@ -211,14 +211,18 @@ int builtin_command(char **argv)
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
-        printf("[%d] running %s", bgCons[tarIdx].bgCmd);
+        printf("[%d] running %s", bgCons[tarIdx].job_idx, [tarIdx].bgCmd);
         printf(">");
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
-        printf("BEFOR: %d\n", argv[1]);
-        *argv[1] = 0;
-        printf("AFTR: %d\n", argv[1]);
+        char per_int[6];
+        strcpy(per_int, argv[1]);
+        printf("BEFOR: %s\n", per_int);
+        for(int i=0; i<6; i++){
+            if(per_int[i] == '%')   per_int[i] = 0;
+        }
+        printf("AFTR: %s\n", per_int);
         int tarIdx = atoi(argv[1]);
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
@@ -232,7 +236,7 @@ int builtin_command(char **argv)
         Run_job(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
-        printf("[%d] running %s", bgCons[tarIdx].bgCmd);
+        printf("[%d] running %s", bgCons[tarIdx].job_idx, [tarIdx].bgCmd);
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
@@ -510,9 +514,6 @@ void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
 void Print_job(bgCon* data)
 {
     for(int i=0; i<MAXPROCESS; i++){
-        if(data[i].bgSt != -1){
-            printf("job_id: %d\tstatus: %d\t cmd: %s", data[i].job_idx, data[i].bgSt, data[i].bgCmd);
-        }
         switch (data[i].bgSt)
         {
         case 0:
@@ -527,7 +528,6 @@ void Print_job(bgCon* data)
             printf("%s", data[i].bgCmd);
             break;
         default:
-            printf("JOB PRINTING ERROR\n");
             break;
         }
     }
