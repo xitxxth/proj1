@@ -86,12 +86,6 @@ int main()
     }
 
 	/* Evaluate */
-    for(int i=0; i<strlen(cmdline); i++){
-        if(cmdline[i]=='&'){
-            cmdline[i] = '\0';
-            bg = 1;
-        }
-    } 
 	eval(cmdline);
     } 
 }
@@ -103,7 +97,7 @@ void eval(char *cmdline)
 {
     char *argv[MAXARGS]; /* Argument list execve() */
     char buf[MAXLINE];   /* Holds modified command line */
-    int bg;              /* Should the job run in bg or fg? */
+    int bg=0;              /* Should the job run in bg or fg? */
     pid_t pid;           /* Process id */
 
     int status;//var for wait
@@ -119,7 +113,7 @@ void eval(char *cmdline)
         }
     } 
     strcpy(buf, cmdline);
-    bg = parseline(buf, argv);
+    int trash = parseline(buf, argv);
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
     int idx = pipe_counter(argv, arr);
     if(!bg) fgPgid = (bgNum+1);
