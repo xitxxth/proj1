@@ -364,15 +364,6 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
             //unblock
             if(pid>0)   Waitpid(pid, &status, WNOHANG);
             if(pipe_flag)   bg_pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);
-            else{
-                if(WIFEXITED(status)){
-                    JobStatus_empty(bgCons, job_idx);
-                    bgNum--;
-                }
-                else if(WIFSTOPPED(status)){
-                    JobStatus_stop(bgCons, job_idx);
-                }
-            }
     }
     return;
 }
