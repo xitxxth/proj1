@@ -53,7 +53,6 @@ int main()
     Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, Sigtstp_handler);
     Signal(SIGCHLD, Sigchld_handler);
-    printf("main: %d\n", getpid());
     pidx=-1;
     currNum=0;
     Init_job(bgCons);
@@ -128,7 +127,7 @@ void eval(char *cmdline)
 int builtin_command(char **argv) 
 {
     int status;
-    if(!strcmp(argav[0], "exit")){
+    if(!strcmp(argv[0], "exit")){
     Kill(0 , SIGTERM);
     exit(0);
     }
@@ -240,8 +239,8 @@ int builtin_command(char **argv)
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
-        JobStatus_empty(bgCons, tarIdx);
         printf("[%d] running %s", bgCons[tarIdx].job_idx, bgCons[tarIdx].bgCmd);
+        JobStatus_empty(bgCons, tarIdx);
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
