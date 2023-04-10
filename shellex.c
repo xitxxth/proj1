@@ -31,7 +31,7 @@ typedef struct{
 } bgCon;
 pid_t fgPgid;
 bgCon bgCons[MAXPROCESS];
-int bgNum, currNum, pidx;// pidx;index of processes, currNum; current number of processses, bgNum; number of background jobs
+int bgNum, currNum, pidx;// pidx;index of jobs, currNum; current number of processses, bgNum; number of background jobs
 void Init_job(bgCon* data);
 void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
 void Print_job(bgCon* data);
@@ -119,7 +119,6 @@ void eval(char *cmdline)
     int idx = pipe_counter(argv, arr);
     if(!bg) fgPgid = (pidx+1);
     if(bg){
-        printf("backswitch on!\n");
         bg_pipe_handler(argv, arr, 0, &oldfd, bg ,cmdline, fgPgid);
         bgNum++;
     }
@@ -368,6 +367,7 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
             //unblock
             if(pid>0)   Waitpid(pid, &status, WNOHANG);
             if(pipe_flag)   bg_pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);
+            else{}
     }
     return;
 }
@@ -397,10 +397,7 @@ void Sigchld_handler(int s)
     int olderrno = errno;
     int status;
     //printf("BGNUM: %d\n", bgNum);
-    if(bgNum>0){
-        Waitpid(-1, &status, WNOHANG);
-        bgNum--;
-    }
+    while(waitpid(-1, &status, WNOHANG)>0)
     errno = olderrno;
 }
 
@@ -551,3 +548,5 @@ void Kill_job_(bgCon* data, int job_idx)
         }
     }
 }
+
+//SIGCHLD마다 호출되어 STATE가 1인 PROCESS들을 확인 후 죽인다.
