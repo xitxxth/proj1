@@ -200,34 +200,35 @@ int builtin_command(char **argv)
         return 1;
     }
     if(strcmp("bg", argv[0])==0){
-        int tarIdx = atoi(argv[1]);
+        char per_int[6];
+        strcpy(per_int, argv[1]);
+        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = 0;
+        int tarIdx = atoi(per_int);
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1){
                     printf("No such job\n");
+                    return 1;
                 }
             }
         }
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
-        printf("[%d] running %s", bgCons[tarIdx].job_idx, [tarIdx].bgCmd);
+        printf("[%d] running %s", bgCons[tarIdx].job_idx, bgCons[tarIdx].bgCmd);
         printf(">");
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
         char per_int[6];
         strcpy(per_int, argv[1]);
-        printf("BEFOR: %s\n", per_int);
-        for(int i=0; i<6; i++){
-            if(per_int[i] == '%')   per_int[i] = 0;
-        }
-        printf("AFTR: %s\n", per_int);
-        int tarIdx = atoi(argv[1]);
+        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = 0;
+        int tarIdx = atoi(per_int);
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1){
                     printf("No such job\n");
+                    return 1;
                 }
             }
         }
@@ -240,32 +241,24 @@ int builtin_command(char **argv)
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
-        int tarIdx = atoi(argv[1]);
-        if(tarIdx == -9) {
-            int tmp = atoi(argv[2]);
-            for(int i=0; i<MAXPROCESS; i++){
-            if(bgCons[i].job_idx == tmp){
-                if(bgCons[i].bgSt == -1){
-                    printf("No such job\n");
-                }
-            }
-        }
-            Kill_job_(bgCons, tmp);
-            JobStatus_empty(bgCons, tarIdx);
-        }
-        else {
-            for(int i=0; i<MAXPROCESS; i++){
+        char per_int[6];
+        strcpy(per_int, argv[1]);
+        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = 0;
+        int tarIdx = atoi(per_int);
+        for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1){
                     printf("No such job\n");
+                    return 1;
                 }
+                else    break;
             }
         }
-            Kill_job(bgCons, tarIdx);
-            JobStatus_empty(bgCons, tarIdx);
-        }
+        Kill_job(bgCons, tarIdx);
+        JobStatus_empty(bgCons, tarIdx);
         return 1;
     }
+
     return 0;                     /* Not a builtin command */
 }
 /* $end eval */
