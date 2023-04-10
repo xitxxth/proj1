@@ -210,9 +210,10 @@ int builtin_command(char **argv)
     }
     if(strcmp("fg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
+        fgPgid = tarIdx;
         JobStatus_run(bgCons, tarIdx);
+        Run_job(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
-        JobStatus_stop(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
         return 1;
     }
@@ -227,7 +228,6 @@ int builtin_command(char **argv)
             Kill_job(bgCons, tarIdx);
             JobStatus_empty(bgCons, tarIdx);
         }
-        currNum--;
         return 1;
     }
     return 0;                     /* Not a builtin command */
@@ -392,7 +392,9 @@ void Sigchld_handler(int s)
 {
     int status;
     int olderrno = errno;
-    //Waitpid(-1, NULL, 0);
+    char cmdline[MAXLINE];
+    cmdline = "ps -ef | grep defunct | awk '{print$2}'"
+    eval(cmdline);
     errno = olderrno;
 }
 
