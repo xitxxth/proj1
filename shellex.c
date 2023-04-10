@@ -395,15 +395,20 @@ void Sigchld_handler(int s)
     pid_t pid;
     int target = -1;
     while(pid=waitpid(-1, &status, WNOHANG)>0){
+        printf("REAPED %d\n", pid);
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].bgPid == pid){
-                target = bgCons->job_idx;
+                target = bgCons[i].job_idx;
+                printf("TARGET %d\n", target);
                 break;
             }
         }
-        for(int i=0; i<MAXPROCESS && target > 0; i++){
+        for(int i=0; i<MAXPROCESS && target >-1; i++){
             if(bgCons[i].job_idx == target){
+                printf("ERASE %d\n", target);
                 JobStatus_empty(bgCons, target);
+                target=-1;
+                break;
             }
         }
     }
