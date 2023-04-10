@@ -128,8 +128,11 @@ void eval(char *cmdline)
 int builtin_command(char **argv) 
 {
     int status;
+    if(!strcmp(argav[0], "exit")){
+    Kill(0 , SIGTERM);
+    exit(0);
+    }
     if (!strcmp(argv[0], "quit")){ /* quit command */
-	printf("out\n");
     exit(0);
     }
     if (!strcmp(argv[0], "&"))    /* Ignore singleton & */
@@ -153,7 +156,7 @@ int builtin_command(char **argv)
             char tmpCmd[MAXLINE];//for the last cmd
             fseek(fp, 0, SEEK_SET);//reset file cursor
             while((fgets(tmpCmd, MAXLINE, fp))!=NULL) {}//to EOF
-            printf("last command is %s", tmpCmd);//print last cmd
+            printf("%s", tmpCmd);//print last cmd
             eval(tmpCmd);//execute it
             return 1;       
         }
@@ -176,7 +179,10 @@ int builtin_command(char **argv)
             while((fgets(lastCmd, MAXLINE, fp))!=NULL) {}//to EOF
             if(strcmp(lastCmd, tmpCmd)!=0)//not repeated history
                 fprintf(fp, "%s", tmpCmd);//save cmd lines in history.txt
-            if(foundFlag)   eval(tmpCmd);//run found execution
+            if(foundFlag){
+                printf("%s", tmpCmd);
+                eval(tmpCmd);//run found execution
+            }
             return 1;
         }
     }
@@ -417,21 +423,17 @@ void Quote_Killer(char* cmdline)
 void Sigchld_handler(int s)
 {
     int olderrno = errno;
-    int status;
     pid_t pid;
     int target = -1;
-    while(pid=waitpid(-1, 0, WNOHANG)>0){
-        printf("REAPED %d\n", pid);
+    while((pid=waitpid(-1, 0, WNOHANG))>0){
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].bgPid == pid){
                 target = bgCons[i].job_idx;
-                printf("TARG %d\n", target);
                 break;
             }
         }
         for(int i=0; i<MAXPROCESS && target >-1; i++){
             if(bgCons[i].job_idx == target){
-                printf("ERASE %d\n", target);
                 JobStatus_empty(bgCons, target);
                 target=-1;
                 break;
@@ -462,7 +464,6 @@ void Sigtstp_handler(int s)
     for(int i=0; i<MAXPROCESS; i++){
         if(bgCons[i].job_idx == fgPgid){
             bgCons[i].bgSt = 0;
-            //printf("job:%d\t Kill:%d\tcmd:%s", bgCons[i].job_idx, bgCons[i].bgPid, bgCons[i].bgCmd);
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
     }
