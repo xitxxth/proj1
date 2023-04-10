@@ -31,7 +31,7 @@ typedef struct{
 } bgCon;
 pid_t fgPgid;
 bgCon bgCons[MAXPROCESS];
-int bgNum, currNum;// bgNum;index of processes, currNum; current number of processses
+int bgNum, currNum, pidx;// pidx;index of processes, currNum; current number of processses, bgNum; number of background jobs
 void Init_job(bgCon* data);
 void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
 void Print_job(bgCon* data);
@@ -54,8 +54,9 @@ int main()
     Signal(SIGTSTP, Sigtstp_handler);
     Signal(SIGCHLD, Sigchld_handler);
     printf("main: %d\n", getpid());
-    bgNum=-1;
+    pidx=-1;
     currNum=0;
+    bgNum=0;
     Init_job(bgCons);
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
@@ -116,10 +117,11 @@ void eval(char *cmdline)
     int trash = parseline(buf, argv);
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
     int idx = pipe_counter(argv, arr);
-    if(!bg) fgPgid = (bgNum+1);
+    if(!bg) fgPgid = (pidx+1);
     if(bg){
         printf("backswitch on!\n");
         bg_pipe_handler(argv, arr, 0, &oldfd, bg ,cmdline, fgPgid);
+        bgNum++;
     }
     else    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, fgPgid);
     //JobStatus_empty(bgCons, job_idx);
@@ -215,6 +217,7 @@ int builtin_command(char **argv)
         Run_job(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
+        bgNum--;
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
@@ -228,6 +231,7 @@ int builtin_command(char **argv)
             Kill_job(bgCons, tarIdx);
             JobStatus_empty(bgCons, tarIdx);
         }
+        bgNum--;
         return 1;
     }
     return 0;                     /* Not a builtin command */
@@ -301,7 +305,7 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             }
         }
             if(idx==0){
-                bgNum++;
+                pidx++;
             }
             if(idx!=0) close(*oldfd);
             close(fd[1]);
@@ -313,7 +317,7 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             else{
                 if(WIFEXITED(status)){
                     JobStatus_empty(bgCons, job_idx);
-                    bgNum--;
+                    pidx--;
                 }
                 else if(WIFSTOPPED(status)){
                     JobStatus_stop(bgCons, job_idx);
@@ -355,7 +359,7 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
             }
         }
             if(idx==0){
-                bgNum++;
+                pidx++;
             }
             if(idx!=0) close(*oldfd);
             close(fd[1]);
@@ -390,11 +394,12 @@ void Quote_Killer(char* cmdline)
 
 void Sigchld_handler(int s)
 {
-    int status;
     int olderrno = errno;
-    char cmdline[MAXLINE];
-    cmdline = "ps -ef | grep defunct | awk '{print$2}'"
-    eval(cmdline);
+    int status;
+    if(bgNum>0){
+        Waitpid(-1, &status, WNOHANG);
+        bgNum--;
+    }
     errno = olderrno;
 }
 
@@ -449,7 +454,7 @@ void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
             strcpy(data[i].bgCmd, cmdline);
             data[i].bgPid = pid;
             data[i].bgSt = state;
-            data[i].job_idx = bgNum;
+            data[i].job_idx = pidx;
             currNum++;
             return;
         }
