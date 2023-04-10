@@ -201,29 +201,62 @@ int builtin_command(char **argv)
     }
     if(strcmp("bg", argv[0])==0){
         int tarIdx = atoi(argv[1]);
+        for(int i=0; i<MAXPROCESS; i++){
+            if(bgCons[i].job_idx == tarIdx){
+                if(bgCons[i].bgSt == -1){
+                    printf("No such job\n");
+                }
+            }
+        }
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
+        printf("[%d] running %s", bgCons[tarIdx].bgCmd);
         printf(">");
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
+        printf("BEFOR: %d\n", argv[1]);
+        *argv[1] = 0;
+        printf("AFTR: %d\n", argv[1]);
         int tarIdx = atoi(argv[1]);
+        for(int i=0; i<MAXPROCESS; i++){
+            if(bgCons[i].job_idx == tarIdx){
+                if(bgCons[i].bgSt == -1){
+                    printf("No such job\n");
+                }
+            }
+        }
         fgPgid = tarIdx;
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
+        printf("[%d] running %s", bgCons[tarIdx].bgCmd);
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
         int tarIdx = atoi(argv[1]);
         if(tarIdx == -9) {
             int tmp = atoi(argv[2]);
+            for(int i=0; i<MAXPROCESS; i++){
+            if(bgCons[i].job_idx == tmp){
+                if(bgCons[i].bgSt == -1){
+                    printf("No such job\n");
+                }
+            }
+        }
             Kill_job_(bgCons, tmp);
             JobStatus_empty(bgCons, tarIdx);
         }
         else {
+            for(int i=0; i<MAXPROCESS; i++){
+            if(bgCons[i].job_idx == tarIdx){
+                if(bgCons[i].bgSt == -1){
+                    printf("No such job\n");
+                }
+            }
+        }
             Kill_job(bgCons, tarIdx);
             JobStatus_empty(bgCons, tarIdx);
         }
@@ -395,17 +428,14 @@ void Sigchld_handler(int s)
     pid_t pid;
     int target = -1;
     while(pid=waitpid(-1, &status, WNOHANG)>0){
-        printf("REAPED %d\n", pid);
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].bgPid == pid){
                 target = bgCons[i].job_idx;
-                printf("TARGET %d\n", target);
                 break;
             }
         }
         for(int i=0; i<MAXPROCESS && target >-1; i++){
             if(bgCons[i].job_idx == target){
-                printf("ERASE %d\n", target);
                 JobStatus_empty(bgCons, target);
                 target=-1;
                 break;
@@ -483,14 +513,22 @@ void Print_job(bgCon* data)
         if(data[i].bgSt != -1){
             printf("job_id: %d\tstatus: %d\t cmd: %s", data[i].job_idx, data[i].bgSt, data[i].bgCmd);
         }
-    }
-}
-
-void JobStatus_change(bgCon* data, int job_idx)
-{
-    for(int i=0; i<MAXPROCESS; i++){
-        if(data[i].job_idx == job_idx){
-            data[i].bgSt = 1;
+        switch (data[i].bgSt)
+        {
+        case 0:
+            printf("[%d] ", data[i].job_idx);
+            printf("suspended ");
+            printf("%s", data[i].bgCmd);
+            break;
+        
+        case 1:
+            printf("[%d] ", data[i].job_idx);
+            printf("running ");
+            printf("%s", data[i].bgCmd);
+            break;
+        default:
+            printf("JOB PRINTING ERROR\n");
+            break;
         }
     }
 }
