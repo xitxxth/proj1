@@ -31,7 +31,7 @@ typedef struct{
 } bgCon;
 pid_t fgPgid;
 bgCon bgCons[MAXPROCESS];
-int bgNum, currNum, pidx;// pidx;index of jobs, currNum; current number of processses, bgNum; number of background jobs
+int currNum, pidx;// pidx;index of jobs, currNum; current number of processses, bgNum; number of background jobs
 void Init_job(bgCon* data);
 void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
 void Print_job(bgCon* data);
@@ -56,7 +56,6 @@ int main()
     printf("main: %d\n", getpid());
     pidx=-1;
     currNum=0;
-    bgNum=0;
     Init_job(bgCons);
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
@@ -120,7 +119,6 @@ void eval(char *cmdline)
     if(!bg) fgPgid = (pidx+1);
     if(bg){
         bg_pipe_handler(argv, arr, 0, &oldfd, bg ,cmdline, fgPgid);
-        bgNum++;
     }
     else    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, fgPgid);
     //JobStatus_empty(bgCons, job_idx);
@@ -216,7 +214,6 @@ int builtin_command(char **argv)
         Run_job(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
-        bgNum--;
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
@@ -230,7 +227,6 @@ int builtin_command(char **argv)
             Kill_job(bgCons, tarIdx);
             JobStatus_empty(bgCons, tarIdx);
         }
-        bgNum--;
         return 1;
     }
     return 0;                     /* Not a builtin command */
@@ -396,8 +392,21 @@ void Sigchld_handler(int s)
 {
     int olderrno = errno;
     int status;
-    //printf("BGNUM: %d\n", bgNum);
-    while(waitpid(-1, &status, WNOHANG)>0)
+    pid_t pid;
+    int target = -1;
+    while(pid=waitpid(-1, &status, WNOHANG)>0){
+        for(int i=0; i<MAXPROCESS; i++){
+            if(bgCons[i].bgPid == pid){
+                target = bgCons->job_idx;
+                break;
+            }
+        }
+        for(int i=0; i<MAXPROCESS && target > 0; i++){
+            if(bgCons[i].job_idx == target){
+                JobStatus_empty(bgCons, target);
+            }
+        }
+    }
     errno = olderrno;
 }
 
@@ -426,7 +435,6 @@ void Sigtstp_handler(int s)
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
     }
-    bgNum++;
     Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
