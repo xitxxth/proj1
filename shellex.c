@@ -108,7 +108,7 @@ void eval(char *cmdline)
     for(int i=1; i<MAXARGS; i++)    arr[i]=-2;
     for(int i=0; i<strlen(cmdline); i++){
         if(cmdline[i]=='&'){
-            cmdline[i] = '\0';
+            cmdline[i] = ' ';
             bg = 1;
         }
     } 
@@ -363,7 +363,7 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
             Add_job(bgCons, pid, 1, cmdline);
             //unblock
             if(pid>0)   Waitpid(pid, &status, WNOHANG);
-            if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);
+            if(pipe_flag)   bg_pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);
             else{
                 if(WIFEXITED(status)){
                     JobStatus_empty(bgCons, job_idx);
