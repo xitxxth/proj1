@@ -86,6 +86,12 @@ int main()
     }
 
 	/* Evaluate */
+    for(int i=0; i<strlen(cmdline); i++){
+        if(cmdline[i]=='&'){
+            cmdline[i] = '\0';
+            bg = 1;
+        }
+    } 
 	eval(cmdline);
     } 
 }
@@ -106,15 +112,14 @@ void eval(char *cmdline)
     int arr[MAXARGS];
     arr[0]=-1;
     for(int i=1; i<MAXARGS; i++)    arr[i]=-2;
-
-    strcpy(buf, cmdline);
-    bg = parseline(buf, argv);
     for(int i=0; i<strlen(cmdline); i++){
         if(cmdline[i]=='&'){
             cmdline[i] = '\0';
             bg = 1;
         }
     } 
+    strcpy(buf, cmdline);
+    bg = parseline(buf, argv);
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
     int idx = pipe_counter(argv, arr);
     if(!bg) fgPgid = (bgNum+1);
