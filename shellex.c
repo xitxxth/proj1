@@ -215,10 +215,10 @@ int builtin_command(char **argv)
                 }
             }
         }
+        printf("[%d] running %s", bgCons[tarIdx].job_idx, bgCons[tarIdx].bgCmd);
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
-        printf("[%d] running %s", bgCons[tarIdx].job_idx, bgCons[tarIdx].bgCmd);
         printf(">");
         return 1;
     }
@@ -235,11 +235,11 @@ int builtin_command(char **argv)
                 }
             }
         }
+        printf("[%d] running %s", bgCons[tarIdx].job_idx, bgCons[tarIdx].bgCmd);
         fgPgid = tarIdx;
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
-        printf("[%d] running %s", bgCons[tarIdx].job_idx, bgCons[tarIdx].bgCmd);
         JobStatus_empty(bgCons, tarIdx);
         return 1;
     }
