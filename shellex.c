@@ -208,18 +208,14 @@ int builtin_command(char **argv)
         for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = 0;
         int tarIdx = atoi(per_int);
         for(int i=0; i<MAXPROCESS; i++){
-        int tmp;
-        for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1){
                     printf("No such job\n");
                     return 1;
                 }
-                tmp = i;
-                break;
             }
         }
-        printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
+        printf("[%d] running %s", bgCons[tarIdx].job_idx, bgCons[tarIdx].bgCmd);
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
@@ -231,18 +227,15 @@ int builtin_command(char **argv)
         strcpy(per_int, argv[1]);
         for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = 0;
         int tarIdx = atoi(per_int);
-        int tmp;
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1){
                     printf("No such job\n");
                     return 1;
                 }
-                tmp = i;
-                break;
             }
         }
-        printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
+        printf("[%d] running %s", bgCons[tarIdx].job_idx, bgCons[tarIdx].bgCmd);
         fgPgid = tarIdx;
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
