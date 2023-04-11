@@ -216,6 +216,7 @@ int builtin_command(char **argv)
                     return 1;
                 }
                 tmp = i;
+                break;
             }
         }
         printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
@@ -238,6 +239,7 @@ int builtin_command(char **argv)
                     return 1;
                 }
                 tmp = i;
+                break;
             }
         }
         printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
