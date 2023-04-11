@@ -205,7 +205,7 @@ int builtin_command(char **argv)
     if(strcmp("bg", argv[0])==0){
         char per_int[6];
         strcpy(per_int, argv[1]);
-        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = 0;
+        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';
         int tarIdx = atoi(per_int);
         int tmp, i;
         for(i=0; i<MAXPROCESS; i++){
@@ -221,13 +221,12 @@ int builtin_command(char **argv)
         JobStatus_run(bgCons, tarIdx);
         Run_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
-        printf(">");
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
         char per_int[6];
         strcpy(per_int, argv[1]);
-        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = 0;
+        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';
         int tarIdx = atoi(per_int);
         int tmp, i;
         for(i=0; i<MAXPROCESS; i++){
