@@ -98,9 +98,6 @@ void eval(char *cmdline)
     char buf[MAXLINE];   /* Holds modified command line */
     int bg=0;              /* Should the job run in bg or fg? */
     pid_t pid;           /* Process id */
-
-    int status;//var for wait
-    int pipe=0;//pipe flag, 0==off | 1==o
     int oldfd=0;
     int arr[MAXARGS];
     arr[0]=-1;
@@ -241,7 +238,7 @@ int builtin_command(char **argv)
         printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
         fgPgid = tarIdx;
         JobStatus_run(bgCons, tarIdx);
-        Run_job(bgCons, tarIdx);
+        //Run_job(bgCons, tarIdx);
         Wait_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
         return 1;
@@ -435,7 +432,7 @@ void Sigchld_handler(int s)
             }
         }
         for(int i=0; i<MAXPROCESS && target >-1; i++){
-            if(bgCons[i].job_idx == target){
+            if(bgCons[i].job_idx == target){99
                 JobStatus_empty(bgCons, target);
                 target=-1;
                 break;
@@ -522,6 +519,7 @@ void Print_job(bgCon* data)
             printf("running ");
             printf("%s", data[i].bgCmd);
             break;
+            
         default:
             break;
         }
