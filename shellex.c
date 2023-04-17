@@ -471,6 +471,7 @@ void Sigtstp_handler(int s)
             bgCons[i].bgSt = 0;
             cnt = bgCons[i].cnt;
             Kill(bgCons[i].bgPid, SIGSTOP);
+            printf("SEND %d\n", bgCons[i].bgPid);
         }
     }
     for(int i=0; i<cnt; i++){
