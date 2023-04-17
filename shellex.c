@@ -473,7 +473,10 @@ void Sigtstp_handler(int s)
             Kill(bgCons[i].bgPid, SIGSTOP);
         }
     }
-    for(int i=0; i<cnt; i++)   Kill(0, SIGCHLD);
+    for(int i=0; i<cnt; i++){
+        printf("%d\n", cnt);
+        Kill(0, SIGCHLD);
+    }
     printf("\n");
     errno = olderrno;
 }
