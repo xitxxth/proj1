@@ -466,6 +466,13 @@ void Sigtstp_handler(int s)
 {
     int olderrno = errno;
     int cnt, j=0;
+            for(int i=0; i<MAXPROCESS; i++){
+            if(bgCons[i].job_idx == fgPgid){
+                bgCons[i].bgSt = 0;
+                cnt = bgCons[i].cnt;
+                break;
+            }
+        }
     while(j<cnt){
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == fgPgid){
