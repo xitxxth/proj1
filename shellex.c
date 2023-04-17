@@ -270,6 +270,10 @@ int builtin_command(char **argv)
                 else    break;
             }
         }
+        if(i==MAXPROCESS){
+            printf("No such job\n");
+            return 1;
+        }
         Kill_job(bgCons, tarIdx);
         JobStatus_empty(bgCons, tarIdx);
         return 1;
