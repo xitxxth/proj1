@@ -351,7 +351,10 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             *oldfd = fd[0]; //STDIN - PREVIOUS PIPE
             Add_job(bgCons, pid, 1, cmdline);//add to job table
             if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
-            if(pid>0)   Waitpid(pid, &status, WUNTRACED);//WAIT
+            if(pid>0){
+                Waitpid(pid, &status, WUNTRACED);//WAIT
+                printf("WAIT CALLED\n");
+            }
             if(pipe_flag){}//NONE
             else{
                 if(WIFEXITED(status)){
