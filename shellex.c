@@ -212,7 +212,7 @@ int builtin_command(char **argv)
         int tmp, i;
         for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
-                if(bgCons[i].bgSt == -1){
+                if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
                     printf("No such job\n");
                     return 1;
                 }
@@ -233,7 +233,7 @@ int builtin_command(char **argv)
         int tmp, i;
         for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
-                if(bgCons[i].bgSt == -1){
+                if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
                     printf("No such job\n");
                     return 1;
                 }
@@ -255,7 +255,7 @@ int builtin_command(char **argv)
         int tarIdx = atoi(per_int);
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
-                if(bgCons[i].bgSt == -1){
+                if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
                     printf("No such job\n");
                     return 1;
                 }
