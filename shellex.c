@@ -345,8 +345,8 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             *oldfd = fd[0]; 
             Add_job(bgCons, pid, 1, cmdline, cnt);
             //unblock
+                        if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx, cnt);
             if(pid>0)   Waitpid(pid, &status, WUNTRACED);
-            if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx, cnt);
             else{
                 if(WIFEXITED(status)){
                     JobStatus_empty(bgCons, job_idx);
@@ -429,6 +429,7 @@ void Sigchld_handler(int s)
     int olderrno = errno;
     pid_t pid;
     int target = -1;
+    int status;
     while((pid=waitpid(-1, 0, WNOHANG))>0){
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].bgPid == pid){
@@ -479,7 +480,7 @@ void Sigtstp_handler(int s)
                 bgCons[i].bgSt = 0;
                 cnt = bgCons[i].cnt;
                 Kill(bgCons[i].bgPid, SIGSTOP);
-                    Kill(0, SIGCHLD); 
+                Kill(0, SIGCHLD); 
                 j++;
             }
         }
