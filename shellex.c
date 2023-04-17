@@ -511,6 +511,9 @@ void Print_job(bgCon* data)
 {
     qsort(bgCons, MAXPROCESS, sizeof(bgCons[0]), compare);
     for(int i=0; i<MAXPROCESS; i++){
+        if(i>0)
+            if(data[i-1].job_idx == data[i].job_idx)
+                continue;
         switch (data[i].bgSt)
         {
         case 0:
