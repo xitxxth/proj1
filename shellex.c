@@ -259,22 +259,19 @@ int builtin_command(char **argv)
     if(strcmp("kill", argv[0])==0){
         char per_int[6];
         strcpy(per_int, argv[1]);
-        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = 0;
+        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';
         int tarIdx = atoi(per_int);
-        int i;
+        int tmp=-1, i;
         for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
                     printf("No such job\n");
                     return 1;
                 }
-                else{
-                    printf("found\n");
-                    break;
-                }
+                tmp = i;
             }
         }
-        if(i==MAXPROCESS){
+        if(tmp==-1){
             printf("No such job\n");
             return 1;
         }
