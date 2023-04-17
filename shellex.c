@@ -45,6 +45,10 @@ void Kill_job(bgCon* data, int job_idx);
 void pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx);
 void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx);
 void Kill_job_(bgCon* data, int job_idx);
+int compare(const void* first, const void* second)
+{
+    return ((bgCon*)second)->job_idx - ((bgCon*)first)->job_idx;
+}
 
 int main() 
 {
@@ -432,7 +436,7 @@ void Sigchld_handler(int s)
             }
         }
         for(int i=0; i<MAXPROCESS && target >-1; i++){
-            if(bgCons[i].job_idx == target){99
+            if(bgCons[i].job_idx == target){
                 JobStatus_empty(bgCons, target);
                 target=-1;
                 break;
@@ -505,6 +509,7 @@ void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
 
 void Print_job(bgCon* data)
 {
+    qsort(bgCons, MAXPROCESS, sizeof(bgCons[0]), compare);
     for(int i=0; i<MAXPROCESS; i++){
         switch (data[i].bgSt)
         {
