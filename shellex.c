@@ -345,8 +345,9 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             *oldfd = fd[0]; 
             Add_job(bgCons, pid, 1, cmdline, cnt);
             //unblock
-                        if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx, cnt);
+            if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx, cnt);
             if(pid>0)   Waitpid(pid, &status, WUNTRACED);
+            if(pipe_flag){}
             else{
                 if(WIFEXITED(status)){
                     JobStatus_empty(bgCons, job_idx);
