@@ -320,12 +320,13 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];//file descriptor
-    pid_t pid=-1;           // Process id 
+    pid_t pid;           // Process id 
     int status;//WAIT - STATUS
     int pipe_flag=0; //pipe flag, child exists!
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     char *parsedArgv[4];//parsed argv
     int i, j=0;
+    int forked;
     for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++){
         parsedArgv[j] = argv[i];//strcpy(parsedArgv[j], argv[i]);
     }
@@ -333,7 +334,7 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
     if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//pipe exist flag
     
     
-    if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
+    if (!(forked=builtin_command(parsedArgv))) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
                 if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
                 if(pipe_flag){ // 1, 2, 3, ... nth cmd
@@ -351,10 +352,7 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             *oldfd = fd[0]; //STDIN - PREVIOUS PIPE
             Add_job(bgCons, pid, 1, cmdline);//add to job table
             if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
-            if(pid>0){
-                Waitpid(pid, &status, WUNTRACED);//WAIT
-                printf("WAIT CALLED\n");
-            }
+            if(pid>0 && forked!=1)   Waitpid(pid, &status, WUNTRACED);//WAIT
             if(pipe_flag){}//NONE
             else{
                 if(WIFEXITED(status)){
@@ -371,19 +369,20 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];
-    pid_t pid=-1;           // Process id 
+    pid_t pid;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     char *parsedArgv[4];//parsed argv
     int i, j=0;
+    int forked;
     for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++){
         parsedArgv[j] = argv[i];//strcpy(parsedArgv[j], argv[i]);
     }
     for(; j<4; j++) parsedArgv[j]=NULL;//END ARGV WITH NULL
     if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//IS THERE '|' EXISTS?
     
-    if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
+    if (!(forked=builtin_command(parsedArgv))) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
