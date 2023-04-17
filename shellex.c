@@ -326,7 +326,6 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     char *parsedArgv[4];//parsed argv
     int i, j=0;
-    int forked;
     for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++){
         parsedArgv[j] = argv[i];//strcpy(parsedArgv[j], argv[i]);
     }
@@ -334,9 +333,8 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
     if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//pipe exist flag
     
     
-    if (!(forked=builtin_command(parsedArgv))) { //quit -> exit(0), & -> ignore, other -> run
+    if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            printf("forked!!!\n");
                 if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
                 if(pipe_flag){ // 1, 2, 3, ... nth cmd
                     dup2(fd[1], 1);//stdout-pipe
@@ -353,8 +351,7 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             *oldfd = fd[0]; //STDIN - PREVIOUS PIPE
             Add_job(bgCons, pid, 1, cmdline);//add to job table
             if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
-            if(pid>0 && forked!=1){
-                                printf("forekd\n");
+            if(pid>0){
                 Waitpid(pid, &status, WUNTRACED);//WAIT
             }
             if(pipe_flag){}//NONE
@@ -379,14 +376,13 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     char *parsedArgv[4];//parsed argv
     int i, j=0;
-    int forked;
     for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++){
         parsedArgv[j] = argv[i];//strcpy(parsedArgv[j], argv[i]);
     }
     for(; j<4; j++) parsedArgv[j]=NULL;//END ARGV WITH NULL
     if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//IS THERE '|' EXISTS?
     
-    if (!(forked=builtin_command(parsedArgv))) { //quit -> exit(0), & -> ignore, other -> run
+    if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
