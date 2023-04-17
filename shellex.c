@@ -261,14 +261,17 @@ int builtin_command(char **argv)
         strcpy(per_int, argv[1]);
         for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = 0;
         int tarIdx = atoi(per_int);
-        for(int i=0; i<MAXPROCESS; i++){
+        int i;
+        for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
                     printf("No such job\n");
                     return 1;
                 }
-                else    break;
-            }
+                else{
+                    printf("found\n");
+                    break;
+                }
         }
         if(i==MAXPROCESS){
             printf("No such job\n");
@@ -616,7 +619,7 @@ void Kill_job(bgCon* data, int job_idx)
 {
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
-            Kill(data[i].bgPid, SIGTERM);
+            Kill(data[i].bgPid, SIGKILL);
         }
     }
 }
