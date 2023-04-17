@@ -17,7 +17,6 @@ int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
 FILE* fp;
-//void pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx, int cnt);
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
 void Sigchld_handler(int s);
@@ -27,14 +26,13 @@ typedef struct{
     pid_t bgPid;
     int job_idx;
     int bgSt;
-    int cnt;
     char bgCmd[MAXARGS];
 } bgCon;
 pid_t fgPgid;
 bgCon bgCons[MAXPROCESS];
 int currNum, pidx;// pidx;index of jobs, currNum; current number of processses, bgNum; number of background jobs
 void Init_job(bgCon* data);
-void Add_job(bgCon* data, pid_t pid, int state, char* cmdline, int cnt);
+void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
 void Print_job(bgCon* data);
 void JobStatus_change(bgCon* data, int job_idx);
 void JobStatus_empty(bgCon* data, int job_idx);
@@ -43,13 +41,12 @@ void JobStatus_stop(bgCon* data, int job_idx);
 void JobStatus_run(bgCon* data, int job_idx);
 void Run_job(bgCon* data, int job_idx);
 void Kill_job(bgCon* data, int job_idx);
-void pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx, int cnt);
-void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx, int cnt);
-void Kill_job_(bgCon* data, int job_idx);
+void pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx);
+void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx);
 int compare(const void* first, const void* second)
 {
     return ((bgCon*)first)->job_idx - ((bgCon*)second)->job_idx;
-}
+}//FOR SORTING JOBS
 
 int main() 
 {
@@ -58,8 +55,8 @@ int main()
     Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, Sigtstp_handler);
     Signal(SIGCHLD, Sigchld_handler);
-    pidx=-1;
-    currNum=0;
+    pidx=-1;//JOB INDEX
+    currNum=0;//JOB NUMBER
     Init_job(bgCons);
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
@@ -103,25 +100,24 @@ void eval(char *cmdline)
     char buf[MAXLINE];   /* Holds modified command line */
     int bg=0;              /* Should the job run in bg or fg? */
     pid_t pid;           /* Process id */
-    int oldfd=0;
-    int arr[MAXARGS];
-    arr[0]=-1;
-    for(int i=1; i<MAXARGS; i++)    arr[i]=-2;
+    int oldfd=0;//previous file descriptor (will be used in pipe_handler, defined here for function argument)
+    int arr[MAXARGS];//index of '|' saved
+    arr[0]=-1;//Assume there exists '|' before first command
+    for(int i=1; i<MAXARGS; i++)    arr[i]=-2;//initial value
     for(int i=0; i<strlen(cmdline); i++){
         if(cmdline[i]=='&'){
             cmdline[i] = ' ';
-            bg = 1;
+            bg = 1;//kill '&', turn on bg flag
         }
     } 
     strcpy(buf, cmdline);
-    int trash = parseline(buf, argv);
+    int trash = parseline(buf, argv);//trash, eliminate warning message
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
-    int cnt = pipe_counter(argv, arr) + 1;
-    if(!bg) fgPgid = (pidx+1);
-    if(bg)  bg_pipe_handler(argv, arr, 0, &oldfd, bg ,cmdline, fgPgid, cnt);
-    else    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, fgPgid, cnt);
-    //JobStatus_empty(bgCons, job_idx);
-    bg=0;
+    trash = pipe_counter(argv, arr); // trash
+    if(!bg) fgPgid = (pidx+1);//if foreground, save job index(pidx) to fgPgid
+    if(bg)  bg_pipe_handler(argv, arr, 0, &oldfd, bg ,cmdline, fgPgid);//call background pipe handling function
+    else    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, fgPgid);//call foreground pipe handling function
+    bg=0;//reset
     return;
 }
 
@@ -130,11 +126,11 @@ int builtin_command(char **argv)
 {
     int status;
     if(!strcmp(argv[0], "exit")){
-    Kill(0 , SIGTERM);
+    Kill(0 , SIGTERM);//off the shell
     exit(0);
     }
     if (!strcmp(argv[0], "quit")){ /* quit command */
-    exit(0);
+    exit(0);//off the shell
     }
     if (!strcmp(argv[0], "&"))    /* Ignore singleton & */
 	return 1;
@@ -201,32 +197,32 @@ int builtin_command(char **argv)
         return 1;
     }
     if(strcmp("jobs", argv[0])==0){
-        Print_job(bgCons);
+        Print_job(bgCons);//call print function
         return 1;
     }
     if(strcmp("bg", argv[0])==0){
-        char per_int[6];
-        strcpy(per_int, argv[1]);
-        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';
-        int tarIdx = atoi(per_int);
-        int tmp=-1, i;
+        char per_int[6];//temporary command line
+        strcpy(per_int, argv[1]);//copy
+        for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';//kill %
+        int tarIdx = atoi(per_int);//string %# -> int #
+        int tmp=-1, i;//initial value
         for(i=0; i<MAXPROCESS; i++){
-            if(bgCons[i].job_idx == tarIdx){
-                if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
-                    printf("No such job\n");
+            if(bgCons[i].job_idx == tarIdx){//found
+                if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){//if empty 
+                    printf("No such job\n");//error
                     return 1;
                 }
-                tmp = i;
+                tmp = i;//found!
             }
         }
-        if(tmp==-1){
-            printf("No such job\n");
+        if(tmp==-1){//not found
+            printf("No such job\n");//error
             return 1;
         }
         printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
-        JobStatus_run(bgCons, tarIdx);
-        Run_job(bgCons, tarIdx);
-        JobStatus_empty(bgCons, tarIdx);
+        JobStatus_run(bgCons, tarIdx);//change job status into run
+        Run_job(bgCons, tarIdx);//run job
+        JobStatus_empty(bgCons, tarIdx);//change job status into run
         return 1;
     }
     if(strcmp("fg", argv[0])==0){
@@ -249,11 +245,11 @@ int builtin_command(char **argv)
             return 1;
         }
         printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
-        fgPgid = tarIdx;
-        JobStatus_run(bgCons, tarIdx);
-        //Run_job(bgCons, tarIdx);
-        Wait_job(bgCons, tarIdx);
-        JobStatus_empty(bgCons, tarIdx);
+        /* SAME ABOVE UNTIL HERE*/
+        fgPgid = tarIdx;//new foreground job
+        JobStatus_run(bgCons, tarIdx);//SAME ABOVE
+        Wait_job(bgCons, tarIdx);//must wait (fore ground)
+        JobStatus_empty(bgCons, tarIdx);//SAME ABOVE
         return 1;
     }
     if(strcmp("kill", argv[0])==0){
@@ -275,8 +271,9 @@ int builtin_command(char **argv)
             printf("No such job\n");
             return 1;
         }
-        Kill_job(bgCons, tarIdx);
-        JobStatus_empty(bgCons, tarIdx);
+        /*SAME ABOVE UNTIL HERE*/
+        Kill_job(bgCons, tarIdx);//SIGKILL JOB
+        JobStatus_empty(bgCons, tarIdx);//SAME ABOVE
         return 1;
     }
 
@@ -319,12 +316,12 @@ int parseline(char *buf, char **argv)
 
 //proto-funciton for 1 | 1 | 1 ...
 
-void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx, int cnt)
+void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
-    int fd[2];
-    pid_t pid;           // Process id 
-    int status;
+    int fd[2];//file descriptor
+    pid_t pid=-1;           // Process id 
+    int status;//WAIT - STATUS
     int pipe_flag=0; //pipe flag, child exists!
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
     char *parsedArgv[4];//parsed argv
@@ -332,53 +329,46 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
     for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++){
         parsedArgv[j] = argv[i];//strcpy(parsedArgv[j], argv[i]);
     }
-    for(; j<4; j++)
-        parsedArgv[j]=NULL;
-    if(arr[idx+1] && arr[idx+1]>-1){
-        pipe_flag=1;
-    }//problem!
+    for(; j<4; j++) parsedArgv[j]=NULL;//end argv with NULL
+    if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//pipe exist flag
+    
     
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
-            if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
-            if(pipe_flag){ // 1, 2, 3, ... nth cmd
-                dup2(fd[1], 1);//stdout-pipe
-                close(fd[1]);
+                if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
+                if(pipe_flag){ // 1, 2, 3, ... nth cmd
+                    dup2(fd[1], 1);//stdout-pipe
+                    close(fd[1]);//close not used pipe
+                }
+                if(execvp(parsedArgv[0], parsedArgv)<0) {
+                        printf("%s:Command not found.\n", argv[0]);
+                        exit(0);
+                }
             }
-            if(execvp(parsedArgv[0], parsedArgv)<0) {
-                    printf("%s:Command not found.\n", argv[0]);
-                    exit(0);
-            }
-        }
-            if(idx==0){
-                pidx++;
-            }
-            if(idx!=0) close(*oldfd);
-            close(fd[1]);
-            *oldfd = fd[0]; 
-            Add_job(bgCons, pid, 1, cmdline, cnt);
-            //unblock
-            if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx, cnt);
-            if(pid>0)   Waitpid(pid, &status, WUNTRACED);
-            if(pipe_flag){}
+            if(idx==0)  pidx++;//job_idx ++
+            if(idx!=0) close(*oldfd);//close previous one
+            close(fd[1]);//close not used one
+            *oldfd = fd[0]; //STDIN - PREVIOUS PIPE
+            Add_job(bgCons, pid, 1, cmdline);//add to job table
+            if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
+            if(pid>0)   Waitpid(pid, &status, WUNTRACED);//WAIT
+            if(pipe_flag){}//NONE
             else{
                 if(WIFEXITED(status)){
-                    JobStatus_empty(bgCons, job_idx);
-                    pidx--;
+                    JobStatus_empty(bgCons, job_idx);//change job status into empty
+                    pidx--;//job_idx --
                 }
-                else if(WIFSTOPPED(status)){
-                    JobStatus_stop(bgCons, job_idx);
-                }
+                else if(WIFSTOPPED(status)) JobStatus_stop(bgCons, job_idx);//change job status into stop
             }
     }
     return;
 }
 
-void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx, int cnt)
+void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
     int fd[2];
-    pid_t pid;           // Process id 
+    pid_t pid=-1;           // Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
@@ -387,33 +377,27 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
     for(i=arr[idx]+1; argv[i]!=NULL && strcmp(argv[i], "|")!=0; i++, j++){
         parsedArgv[j] = argv[i];//strcpy(parsedArgv[j], argv[i]);
     }
-    for(; j<4; j++)
-        parsedArgv[j]=NULL;
-    if(arr[idx+1] && arr[idx+1]>-1){
-        pipe_flag=1;
-    }//problem!
+    for(; j<4; j++) parsedArgv[j]=NULL;//END ARGV WITH NULL
+    if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//IS THERE '|' EXISTS?
     
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
-                close(fd[1]);
+                close(fd[1]);//close not used pipe
             }
             if(execvp(parsedArgv[0], parsedArgv)<0) {
                     printf("%s:Command not found.\n", argv[0]);
                     exit(0);
             }
         }
-            if(idx==0){
-                pidx++;
-            }
-            if(idx!=0) close(*oldfd);
-            close(fd[1]);
-            *oldfd = fd[0]; 
-            Add_job(bgCons, pid, 1, cmdline, cnt);
-            //unblock
-            if(pipe_flag)   bg_pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx, cnt);
+            if(idx==0)  pidx++;//job_idx ++
+            if(idx!=0) close(*oldfd);//close previous one
+            close(fd[1]);//close not used one
+            *oldfd = fd[0]; //STDIN - PREVIOUS PIPE
+            Add_job(bgCons, pid, 1, cmdline);//add job to job table
+            if(pipe_flag)   bg_pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
     }
     return;
 }
@@ -434,7 +418,7 @@ int pipe_counter(char** argv, int* arr)
 void Quote_Killer(char* cmdline)
 {
     for(int i=0; cmdline[i]; i++){
-        if(cmdline[i] == '"' || cmdline[i] == '\'')   cmdline[i] = ' ';
+        if(cmdline[i] == '"' || cmdline[i] == '\'')   cmdline[i] = ' ';//KILL QUOTE
     }
 }
 
@@ -442,21 +426,21 @@ void Sigchld_handler(int s)
 {
     int olderrno = errno;
     pid_t pid;
-    int target = -1;
-    int status;
-    while((pid=waitpid(-1, 0, WNOHANG))>0){
+    int target = -1;//INITIAL VALUE
+    int status;//WAIT - STATUS
+    while((pid=waitpid(-1, 0, WNOHANG))>0){//REAP ALL
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].bgPid == pid){
                 target = bgCons[i].job_idx;
                 break;
-            }
+            }//WHO IS REAPED?
         }
         for(int i=0; i<MAXPROCESS && target >-1; i++){
             if(bgCons[i].job_idx == target){
                 JobStatus_empty(bgCons, target);
                 target=-1;
                 break;
-            }
+            }//CLEAR THE REAPED-JOB TABLE
         }
     }
     errno = olderrno;
@@ -471,7 +455,7 @@ void Sigint_handler(int s)
             bgCons[i].job_idx = -1;
             Kill(bgCons[i].bgPid, SIGTERM);
             currNum--;
-        }
+        }//KILL FOREGROUND JOB & CLEAR JOB TABLE
     }
     printf("\n");
     errno = olderrno;
@@ -480,25 +464,19 @@ void Sigint_handler(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
-    int cnt, j=0;
             for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == fgPgid){
                 bgCons[i].bgSt = 0;
-                cnt = bgCons[i].cnt;
                 break;
             }
-        }
-    while(j<cnt){
+        }//CHANGE JOB TABLE
         for(int i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == fgPgid){
                 bgCons[i].bgSt = 0;
-                cnt = bgCons[i].cnt;
                 Kill(bgCons[i].bgPid, SIGSTOP);
                 Kill(0, SIGCHLD); 
-                j++;
             }
-        }
-    }
+        }//STOP FOREGROUND JOB
     printf("\n");
     errno = olderrno;
 }
@@ -509,15 +487,15 @@ void Init_job(bgCon* data)
         data[i].bgPid = 0;
         data[i].bgSt = -1;
         data[i].job_idx = -1;
-    }
+    }//INITIALIZE JOB TABLE
 }
 
-void Add_job(bgCon* data, pid_t pid, int state, char* cmdline, int cnt)
+void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
 {
     if(currNum==MAXPROCESS){
         printf("PROCESS OVER\n");
         return;
-    }
+    }//SIZE OVER
     int i;
     for(i=0; i<MAXPROCESS; i++){
         if(data[i].bgSt == -1){
@@ -525,15 +503,14 @@ void Add_job(bgCon* data, pid_t pid, int state, char* cmdline, int cnt)
             data[i].bgPid = pid;
             data[i].bgSt = state;
             data[i].job_idx = pidx;
-            data[i].cnt = cnt;
             currNum++;
             return;
-        }
+        }//ADD TO JOB TABLE
     }
     if(i==MAXPROCESS){
         printf("ADD JOB ERROR\n");
         return;
-    }
+    }//ADD ERROR
 }
 
 void Print_job(bgCon* data)
@@ -542,23 +519,23 @@ void Print_job(bgCon* data)
     for(int i=0; i<MAXPROCESS; i++){
         if(i>0)
             if(data[i-1].job_idx == data[i].job_idx)
-                continue;
+                continue;//NEVER PRINT SAME JOB
         switch (data[i].bgSt)
         {
         case 0:
             printf("[%d] ", data[i].job_idx);
             printf("suspended ");
             printf("%s", data[i].bgCmd);
-            break;
+            break;//SUSPENDED
         
         case 1:
             printf("[%d] ", data[i].job_idx);
             printf("running ");
             printf("%s", data[i].bgCmd);
-            break;
+            break;//RUNNING
             
         default:
-            break;
+            break;//NOTHING
         }
     }
     return;
@@ -571,7 +548,7 @@ void JobStatus_empty(bgCon* data, int job_idx)
             data[i].bgSt = -1;
             data[i].job_idx = -1;
             currNum--;
-        }
+        }//CLEAR JOB TABLE
     }
 }
 
@@ -583,7 +560,7 @@ void Wait_job(bgCon* data, int job_idx)
             Kill(data[i].bgPid, SIGCONT);
             Waitpid(data[i].bgPid, &status, WUNTRACED);
         }
-    }
+    }//WAIT JOB
 }
 
 void JobStatus_stop(bgCon* data, int job_idx)
@@ -592,7 +569,7 @@ void JobStatus_stop(bgCon* data, int job_idx)
         if(data[i].job_idx == job_idx){
             data[i].bgSt = 0;
         }
-    }
+    }//CHANGE JOB TABLE INTO STOP
 }
 
 void JobStatus_run(bgCon* data, int job_idx)
@@ -601,7 +578,7 @@ void JobStatus_run(bgCon* data, int job_idx)
         if(data[i].job_idx == job_idx){
             data[i].bgSt = 1;
         }
-    }
+    }//CHANGE JOB TABLE INTO RUN
 }
 
 void Run_job(bgCon* data, int job_idx)
@@ -610,7 +587,7 @@ void Run_job(bgCon* data, int job_idx)
         if(data[i].job_idx == job_idx){
             Kill(data[i].bgPid, SIGCONT);
         }
-    }
+    }//RUN JOB
 }
 
 void Kill_job(bgCon* data, int job_idx)
@@ -619,16 +596,5 @@ void Kill_job(bgCon* data, int job_idx)
         if(data[i].job_idx == job_idx){
             Kill(data[i].bgPid, SIGKILL);
         }
-    }
+    }//KILL JOB
 }
-
-void Kill_job_(bgCon* data, int job_idx)
-{
-    for(int i=0; i<MAXPROCESS; i++){
-        if(data[i].job_idx == job_idx){
-            Kill(data[i].bgPid, SIGKILL);
-        }
-    }
-}
-
-//SIGCHLD마다 호출되어 STATE가 1인 PROCESS들을 확인 후 죽인다.
