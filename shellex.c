@@ -336,6 +336,7 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
     
     if (!(forked=builtin_command(parsedArgv))) { //quit -> exit(0), & -> ignore, other -> run
             if((pid = Fork())==0){//child
+            printf("forked!!!\n");
                 if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
                 if(pipe_flag){ // 1, 2, 3, ... nth cmd
                     dup2(fd[1], 1);//stdout-pipe
@@ -353,8 +354,8 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             Add_job(bgCons, pid, 1, cmdline);//add to job table
             if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
             if(pid>0 && forked!=1){
+                                printf("forekd\n");
                 Waitpid(pid, &status, WUNTRACED);//WAIT
-                printf("forekd\n");
             }
             if(pipe_flag){}//NONE
             else{
