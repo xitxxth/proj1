@@ -272,6 +272,7 @@ int builtin_command(char **argv)
                     printf("found\n");
                     break;
                 }
+            }
         }
         if(i==MAXPROCESS){
             printf("No such job\n");
