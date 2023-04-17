@@ -465,19 +465,18 @@ void Sigint_handler(int s)
 void Sigtstp_handler(int s)
 {
     int olderrno = errno;
-    int cnt;
-    for(int i=0; i<MAXPROCESS; i++){
-        if(bgCons[i].job_idx == fgPgid){
-            bgCons[i].bgSt = 0;
-            cnt = bgCons[i].cnt;
-            Kill(bgCons[i].bgPid, SIGSTOP);
-            printf("SEND %d\n", bgCons[i].bgPid);
+    int cnt, j=0;
+    while(j<cnt){
+        for(int i=0; i<MAXPROCESS; i++){
+            if(bgCons[i].job_idx == fgPgid){
+                bgCons[i].bgSt = 0;
+                cnt = bgCons[i].cnt;
+                Kill(bgCons[i].bgPid, SIGSTOP); 
+                j++;
+            }
         }
     }
-    for(int i=0; i<cnt; i++){
-        printf("%d\n", cnt);
-        Kill(0, SIGCHLD);
-    }
+    Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
 }
