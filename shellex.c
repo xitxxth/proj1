@@ -478,12 +478,12 @@ void Sigtstp_handler(int s)
             if(bgCons[i].job_idx == fgPgid){
                 bgCons[i].bgSt = 0;
                 cnt = bgCons[i].cnt;
-                Kill(bgCons[i].bgPid, SIGSTOP); 
+                Kill(bgCons[i].bgPid, SIGSTOP);
+                    Kill(0, SIGCHLD); 
                 j++;
             }
         }
     }
-    Kill(0, SIGCHLD);
     printf("\n");
     errno = olderrno;
 }
