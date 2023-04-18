@@ -32,15 +32,15 @@ typedef struct{
 volatile sig_atomic_t pid_t fgPgid;
 volatile bgCon bgCons[MAXPROCESS];
 volatile int currNum, pidx;// pidx;index of jobs, currNum; current number of processses, bgNum; number of background jobs
-void Init_job(bgCon* data);
-void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
-void Print_job(bgCon* data);
-void JobStatus_empty(bgCon* data, int job_idx);
-void Wait_job(bgCon* data, int job_idx);
-void JobStatus_stop(bgCon* data, int job_idx);
-void JobStatus_run(bgCon* data, int job_idx);
-void Run_job(bgCon* data, int job_idx);
-void Kill_job(bgCon* data, int job_idx);
+void Init_job(volatile bgCon* data);
+void Add_job(volatile bgCon* data, pid_t pid, int state, char* cmdline);
+void Print_job(volatile bgCon* data);
+void JobStatus_empty(volatile bgCon* data, int job_idx);
+void Wait_job(volatile bgCon* data, int job_idx);
+void JobStatus_stop(volatile bgCon* data, int job_idx);
+void JobStatus_run(volatile bgCon* data, int job_idx);
+void Run_job(volatile bgCon* data, int job_idx);
+void Kill_job(volatile bgCon* data, int job_idx);
 void pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx);
 void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx);
 int compare(const void* first, const void* second)
@@ -48,7 +48,7 @@ int compare(const void* first, const void* second)
     return ((bgCon*)first)->job_idx - ((bgCon*)second)->job_idx;
 }//FOR SORTING JOBS
 /*COMMENTS ON FUNCTIONS AT BOTTOM*/
-
+int main(void)
 {
     //mainPid = getpid();
     sigset_t mask_all, mask_one, prev_all;
@@ -499,7 +499,7 @@ void Sigtstp_handler(int s)
     errno = olderrno;
 }
 
-void Init_job(bgCon* data)
+void Init_job(volatile bgCon* data)
 {
     for(int i=0; i<MAXPROCESS; i++){
         data[i].bgPid = 0;
@@ -508,7 +508,7 @@ void Init_job(bgCon* data)
     }//INITIALIZE JOB TABLE
 }
 
-void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
+void Add_job(volatile bgCon* data, pid_t pid, int state, char* cmdline)
 {
     if(currNum==MAXPROCESS){
         printf("PROCESS OVER\n");
@@ -531,7 +531,7 @@ void Add_job(bgCon* data, pid_t pid, int state, char* cmdline)
     }//ADD ERROR
 }
 
-void Print_job(bgCon* data)
+void Print_job(volatile bgCon* data)
 {
     qsort(bgCons, MAXPROCESS, sizeof(bgCons[0]), compare);
     for(int i=0; i<MAXPROCESS; i++){
@@ -559,7 +559,7 @@ void Print_job(bgCon* data)
     return;
 }
 
-void JobStatus_empty(bgCon* data, int job_idx)
+void JobStatus_empty(volatile bgCon* data, int job_idx)
 {
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
@@ -570,7 +570,7 @@ void JobStatus_empty(bgCon* data, int job_idx)
     }
 }
 
-void Wait_job(bgCon* data, int job_idx)
+void Wait_job(volatile bgCon* data, int job_idx)
 {
     int status;
     for(int i=0; i<MAXPROCESS; i++){
@@ -581,7 +581,7 @@ void Wait_job(bgCon* data, int job_idx)
     }//WAIT JOB
 }
 
-void JobStatus_stop(bgCon* data, int job_idx)
+void JobStatus_stop(volatile bgCon* data, int job_idx)
 {
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
@@ -590,7 +590,7 @@ void JobStatus_stop(bgCon* data, int job_idx)
     }//CHANGE JOB TABLE INTO STOP
 }
 
-void JobStatus_run(bgCon* data, int job_idx)
+void JobStatus_run(volatile bgCon* data, int job_idx)
 {
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
@@ -599,7 +599,7 @@ void JobStatus_run(bgCon* data, int job_idx)
     }//CHANGE JOB TABLE INTO RUN
 }
 
-void Run_job(bgCon* data, int job_idx)
+void Run_job(volatile bgCon* data, int job_idx)
 {
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
@@ -608,7 +608,7 @@ void Run_job(bgCon* data, int job_idx)
     }//RUN JOB
 }
 
-void Kill_job(bgCon* data, int job_idx)
+void Kill_job(volatile bgCon* data, int job_idx)
 {
     for(int i=0; i<MAXPROCESS; i++){
         if(data[i].job_idx == job_idx){
