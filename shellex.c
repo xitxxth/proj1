@@ -16,6 +16,7 @@ void eval(char *cmdline);
 int parseline(char *buf, char **argv);
 int builtin_command(char **argv); 
 //User defined
+/*COMMENTS ON FUNCTIONS AT BOTTOM*/
 FILE* fp;
 int pipe_counter(char **argv, int *arr);
 void Quote_Killer(char* cmdline);
@@ -23,18 +24,17 @@ void Sigchld_handler(int s);
 void Sigint_handler(int s);
 void Sigtstp_handler(int s);
 typedef struct{
-    pid_t bgPid;
-    int job_idx;
-    int bgSt;
-    char bgCmd[MAXARGS];
+    volatile pid_t bgPid;
+    volatile int job_idx;
+    volatile int bgSt;
+    volatile char bgCmd[MAXARGS];
 } bgCon;
-pid_t fgPgid;
-bgCon bgCons[MAXPROCESS];
-int currNum, pidx;// pidx;index of jobs, currNum; current number of processses, bgNum; number of background jobs
+volatile sig_atomic_t pid_t fgPgid;
+volatile bgCon bgCons[MAXPROCESS];
+volatile int currNum, pidx;// pidx;index of jobs, currNum; current number of processses, bgNum; number of background jobs
 void Init_job(bgCon* data);
 void Add_job(bgCon* data, pid_t pid, int state, char* cmdline);
 void Print_job(bgCon* data);
-void JobStatus_change(bgCon* data, int job_idx);
 void JobStatus_empty(bgCon* data, int job_idx);
 void Wait_job(bgCon* data, int job_idx);
 void JobStatus_stop(bgCon* data, int job_idx);
@@ -47,11 +47,14 @@ int compare(const void* first, const void* second)
 {
     return ((bgCon*)first)->job_idx - ((bgCon*)second)->job_idx;
 }//FOR SORTING JOBS
+/*COMMENTS ON FUNCTIONS AT BOTTOM*/
 
-int main() 
 {
     //mainPid = getpid();
-    sigset_t mask, prev;
+    sigset_t mask_all, mask_one, prev_all;
+    Sigfillset(&mask_all);
+    Sigemptyset(&mask_one);
+    Sigaddset(&mask_one, SIGCHLD);
     Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, Sigtstp_handler);
     Signal(SIGCHLD, Sigchld_handler);
@@ -319,8 +322,12 @@ int parseline(char *buf, char **argv)
 void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
+    sigset_t mask_all, mask_one, prev_all;
+    Sigfillset(&mask_all);
+    Sigemptyset(&mask_one);
+    Sigaddset(&mask_one, SIGCHLD);
     int fd[2];//file descriptor
-    pid_t pid;           // Process id 
+    pid_t pid;// Process id 
     int status;//WAIT - STATUS
     int pipe_flag=0; //pipe flag, child exists!
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
@@ -332,14 +339,15 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
     for(; j<4; j++) parsedArgv[j]=NULL;//end argv with NULL
     if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//pipe exist flag
     
-    
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
+        Sigprocmask(SIG_BLOCK, &mask_one, &prev_all);
             if((pid = Fork())==0){//child
                 if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
                 if(pipe_flag){ // 1, 2, 3, ... nth cmd
                     dup2(fd[1], 1);//stdout-pipe
                     close(fd[1]);//close not used pipe
                 }
+                Sigprocmask(SIG_SETMASK, &prev_all, NULL);
                 if(execvp(parsedArgv[0], parsedArgv)<0) {
                         printf("%s:Command not found.\n", argv[0]);
                         exit(0);
@@ -349,11 +357,11 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             if(idx!=0) close(*oldfd);//close previous one
             close(fd[1]);//close not used one
             *oldfd = fd[0]; //STDIN - PREVIOUS PIPE
+            Sigprocmask(SIG_BLOCK, &mask_all, NULL);
             Add_job(bgCons, pid, 1, cmdline);//add to job table
+            Sigprocmask(SIG_SETMASK, &prev_all, NULL);
             if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
-            if(pid>0){
-                Waitpid(pid, &status, WUNTRACED);//WAIT
-            }
+            if(pid>0)   waitpid(pid, &status, WUNTRACED);//WAIT
             if(pipe_flag){}//NONE
             else{
                 if(WIFEXITED(status)){
@@ -369,8 +377,12 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
 void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *cmdline, int job_idx)
 {// handle mine >> | exists? >> pass it >> done , idx starts from 1
     //printf("handler on! %d\n", idx);
+    sigset_t mask_all, mask_one, prev_all;
+    Sigfillset(&mask_all);
+    Sigemptyset(&mask_one);
+    Sigaddset(&mask_one, SIGCHLD);
     int fd[2];
-    pid_t pid;           // Process id 
+    pid_t pid;// Process id 
     int status;
     int pipe_flag=0; //pipe flag, child exists!
     int pipeStatus = pipe(fd);//commuicate with child of mine, fd[0] == read, fd[1] == write
@@ -383,12 +395,14 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
     if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//IS THERE '|' EXISTS?
     
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
+        Sigprocmask(SIG_BLOCK, &mask_one, &prev_all);
             if((pid = Fork())==0){//child
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
                 close(fd[1]);//close not used pipe
             }
+            Sigprocmask(SIG_SETMASK, &prev_all, NULL);
             if(execvp(parsedArgv[0], parsedArgv)<0) {
                     printf("%s:Command not found.\n", argv[0]);
                     exit(0);
@@ -398,7 +412,9 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
             if(idx!=0) close(*oldfd);//close previous one
             close(fd[1]);//close not used one
             *oldfd = fd[0]; //STDIN - PREVIOUS PIPE
+            Sigprocmask(SIG_BLOCK, &mask_all, NULL);
             Add_job(bgCons, pid, 1, cmdline);//add job to job table
+            Sigprocmask(SIG_SETMASK, &prev_all, NULL);
             if(pipe_flag)   bg_pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
     }
     return;
@@ -459,7 +475,7 @@ void Sigint_handler(int s)
             currNum--;
         }//KILL FOREGROUND JOB & CLEAR JOB TABLE
     }
-    printf("\n");
+    sio_puts("\n");
     errno = olderrno;
 }
 
@@ -479,7 +495,7 @@ void Sigtstp_handler(int s)
                 Kill(0, SIGCHLD); 
             }
         }//STOP FOREGROUND JOB
-    printf("\n");
+    sio_puts("\n");
     errno = olderrno;
 }
 
