@@ -242,7 +242,7 @@ int builtin_command(char **argv)
         printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
         JobStatus_run(bgCons, tarIdx);//change job status into run
         Run_job(bgCons, tarIdx);//run job
-        JobStatus_empty(bgCons, tarIdx);//change job status into run
+        //JobStatus_empty(bgCons, tarIdx);//change job status into run
         Sigprocmask(SIG_SETMASK, &prev_all, NULL);
         return 1;   
     }   
