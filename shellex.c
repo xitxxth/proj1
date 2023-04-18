@@ -29,7 +29,7 @@ typedef struct{
     volatile int bgSt;
     volatile char bgCmd[MAXARGS];
 } bgCon;
-volatile sig_atomic_t pid_t fgPgid;
+volatile sig_atomic_t fgPgid;
 volatile bgCon bgCons[MAXPROCESS];
 volatile int currNum, pidx;// pidx;index of jobs, currNum; current number of processses, bgNum; number of background jobs
 void Init_job(volatile bgCon* data);
@@ -58,9 +58,13 @@ int main(void)
     Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, Sigtstp_handler);
     Signal(SIGCHLD, Sigchld_handler);
+    
+    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
     pidx=-1;//JOB INDEX
     currNum=0;//JOB NUMBER
     Init_job(bgCons);
+    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+
     char cmdline[MAXLINE]; /* Command line */
     /*user defined code, for > history*/
     fp = fopen("history.txt", "a+t");//open history file if it exists or make a new history file
@@ -99,6 +103,10 @@ int main(void)
 /* eval - Evaluate a command line */
 void eval(char *cmdline) 
 {
+    sigset_t mask_all, mask_one, prev_all;
+    Sigfillset(&mask_all);
+    Sigemptyset(&mask_one);
+    Sigaddset(&mask_one, SIGCHLD);
     char *argv[MAXARGS]; /* Argument list execve() */
     char buf[MAXLINE];   /* Holds modified command line */
     int bg=0;              /* Should the job run in bg or fg? */
@@ -117,7 +125,9 @@ void eval(char *cmdline)
     int trash = parseline(buf, argv);//trash, eliminate warning message
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
     trash = pipe_counter(argv, arr); // trash
+    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
     if(!bg) fgPgid = (pidx+1);//if foreground, save job index(pidx) to fgPgid
+    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
     if(bg)  bg_pipe_handler(argv, arr, 0, &oldfd, bg ,cmdline, fgPgid);//call background pipe handling function
     else    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, fgPgid);//call foreground pipe handling function
     bg=0;//reset
@@ -127,6 +137,10 @@ void eval(char *cmdline)
 /* If first arg is a builtin command, run it and return true    */
 int builtin_command(char **argv) 
 {
+    sigset_t mask_all, mask_one, prev_all;
+    Sigfillset(&mask_all);
+    Sigemptyset(&mask_one);
+    Sigaddset(&mask_one, SIGCHLD);
     int status;
     if(!strcmp(argv[0], "exit")){
     Kill(0 , SIGTERM);//off the shell
@@ -170,113 +184,121 @@ int builtin_command(char **argv)
                     printf("-bash: !%d: event not found\n", num);
                     foundFlag=0;//flag off
                     break;
-                }
-            }
-            fseek(fp, 0, SEEK_END);//move to EOF
-            
+                }   
+            }   
+            fseek(fp, 0,    SEEK_END);//move to EOF
+                
             char lastCmd[MAXLINE];
             fseek(fp, 0, SEEK_SET);//reset file cursor
             while((fgets(lastCmd, MAXLINE, fp))!=NULL) {}//to EOF
             if(strcmp(lastCmd, tmpCmd)!=0)//not repeated history
                 fprintf(fp, "%s", tmpCmd);//save cmd lines in history.txt
-            if(foundFlag){
+            if(foundFlag) {
                 printf("%s", tmpCmd);
                 eval(tmpCmd);//run found execution
-            }
-            return 1;
-        }
-    }
-
+            }   
+            return 1;   
+        }   
+    }   
+    
     if(strcmp("cd", argv[0])==0){//"cd"
         if(argv[1]==NULL || *argv[1]=='~'){//cd, cd ~
             int set = chdir(getenv("HOME"));//cd home
-            //var set has no role, mask warning message
-        }
-        else{
+            //var set has    no role, mask warning message
+        }   
+        else{   
             if(chdir(argv[1])==-1){//chdir failed
                 printf("No directory\n");//error messageS
-            }
-        }
-        return 1;
-    }
+            }   
+        }   
+        return 1;   
+    }   
     if(strcmp("jobs", argv[0])==0){
+        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
         Print_job(bgCons);//call print function
-        return 1;
-    }
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+        return 1;   
+    }   
     if(strcmp("bg", argv[0])==0){
         char per_int[6];//temporary command line
         strcpy(per_int, argv[1]);//copy
         for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';//kill %
         int tarIdx = atoi(per_int);//string %# -> int #
-        int tmp=-1, i;//initial value
+        int tmp=-1, i;//i   nitial value
+        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
         for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){//found
                 if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){//if empty 
                     printf("No such job\n");//error
                     return 1;
-                }
+                }   
                 tmp = i;//found!
-            }
-        }
-        if(tmp==-1){//not found
+            }   
+        }   
+        if(tmp==-1){//not    found
             printf("No such job\n");//error
-            return 1;
-        }
+            return 1;   
+        }   
         printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
         JobStatus_run(bgCons, tarIdx);//change job status into run
         Run_job(bgCons, tarIdx);//run job
         JobStatus_empty(bgCons, tarIdx);//change job status into run
-        return 1;
-    }
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+        return 1;   
+    }   
     if(strcmp("fg", argv[0])==0){
-        char per_int[6];
+        char per_int[6];    
         strcpy(per_int, argv[1]);
         for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';
         int tarIdx = atoi(per_int);
-        int tmp=-1, i;
+        int tmp=-1, i;  
+        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
         for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
                     printf("No such job\n");
                     return 1;
-                }
-                tmp = i;
-            }
-        }
-        if(tmp==-1){
+                }   
+                tmp = i;    
+            }   
+        }   
+        if(tmp==-1){    
             printf("No such job\n");
-            return 1;
-        }
+            return 1;   
+        }   
         printf("[%d] running %s", bgCons[tmp].job_idx, bgCons[tmp].bgCmd);
-        /* SAME ABOVE UNTIL HERE*/
+        /* SAME ABOVE UNT   IL HERE*/
         fgPgid = tarIdx;//new foreground job
         JobStatus_run(bgCons, tarIdx);//SAME ABOVE
         Wait_job(bgCons, tarIdx);//must wait (fore ground)
         JobStatus_empty(bgCons, tarIdx);//SAME ABOVE
-        return 1;
-    }
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+        return 1;   
+    }   
     if(strcmp("kill", argv[0])==0){
-        char per_int[6];
+        char per_int[6];    
         strcpy(per_int, argv[1]);
         for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';
         int tarIdx = atoi(per_int);
-        int tmp=-1, i;
+        int tmp=-1, i;  
+        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
         for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
                     printf("No such job\n");
                     return 1;
-                }
-                tmp = i;
-            }
-        }
-        if(tmp==-1){
+                }   
+                tmp = i;    
+            }   
+        }   
+        if(tmp==-1){    
             printf("No such job\n");
-            return 1;
-        }
+            return 1;   
+        }   
         /*SAME ABOVE UNTIL HERE*/
         Kill_job(bgCons, tarIdx);//SIGKILL JOB
         JobStatus_empty(bgCons, tarIdx);//SAME ABOVE
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
         return 1;
     }
 
@@ -365,10 +387,16 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             if(pipe_flag){}//NONE
             else{
                 if(WIFEXITED(status)){
+                    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
                     JobStatus_empty(bgCons, job_idx);//change job status into empty
                     pidx--;//job_idx --
+                    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
                 }
-                else if(WIFSTOPPED(status)) JobStatus_stop(bgCons, job_idx);//change job status into stop
+                else if(WIFSTOPPED(status)){
+                    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+                    JobStatus_stop(bgCons, job_idx);//change job status into stop
+                    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+                }
             }
     }
     return;
