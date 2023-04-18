@@ -24,10 +24,10 @@ void Sigchld_handler(int s);
 void Sigint_handler(int s);
 void Sigtstp_handler(int s);
 typedef struct{
-    volatile pid_t bgPid;
-    volatile int job_idx;
-    volatile int bgSt;
-    volatile char bgCmd[MAXARGS];
+    volatile pid_t bgPid;//process id
+    volatile int job_idx;//job index
+    volatile int bgSt;//state
+    volatile char bgCmd[MAXARGS];//command line
 } bgCon;
 volatile sig_atomic_t fgPgid;
 volatile bgCon bgCons[MAXPROCESS];
@@ -51,13 +51,13 @@ int compare(const void* first, const void* second)
 int main(void)
 {
     //mainPid = getpid();
-    sigset_t mask_all, mask_one, prev_all;
-    Sigfillset(&mask_all);
-    Sigemptyset(&mask_one);
-    Sigaddset(&mask_one, SIGCHLD);
+    sigset_t mask_all, mask_one, prev_all;//signal blocking
+    Sigfillset(&mask_all);//fill mask bits
+    Sigemptyset(&mask_one);//empty bits
+    Sigaddset(&mask_one, SIGCHLD);//add SIGCHLD
     Signal(SIGINT, Sigint_handler);
     Signal(SIGTSTP, Sigtstp_handler);
-    Signal(SIGCHLD, Sigchld_handler);
+    Signal(SIGCHLD, Sigchld_handler);//INSTALL
     
     Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
     pidx=-1;//JOB INDEX
@@ -103,10 +103,10 @@ int main(void)
 /* eval - Evaluate a command line */
 void eval(char *cmdline) 
 {
-    sigset_t mask_all, mask_one, prev_all;
-    Sigfillset(&mask_all);
-    Sigemptyset(&mask_one);
-    Sigaddset(&mask_one, SIGCHLD);
+    sigset_t mask_all, mask_one, prev_all;//SIGNAL BLOCK
+    Sigfillset(&mask_all);//MASK BITS
+    Sigemptyset(&mask_one);//EMPTY BITS
+    Sigaddset(&mask_one, SIGCHLD);//ADD SIGCHLD
     char *argv[MAXARGS]; /* Argument list execve() */
     char buf[MAXLINE];   /* Holds modified command line */
     int bg=0;              /* Should the job run in bg or fg? */
@@ -125,9 +125,9 @@ void eval(char *cmdline)
     int trash = parseline(buf, argv);//trash, eliminate warning message
     if (argv[0] == NULL)    return;   /* Ignore empty lines */
     trash = pipe_counter(argv, arr); // trash
-    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);//BLOCK ALL
     if(!bg) fgPgid = (pidx+1);//if foreground, save job index(pidx) to fgPgid
-    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+    Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
     if(bg)  bg_pipe_handler(argv, arr, 0, &oldfd, bg ,cmdline, fgPgid);//call background pipe handling function
     else    pipe_handler(argv, arr, 0, &oldfd, bg, cmdline, fgPgid);//call foreground pipe handling function
     bg=0;//reset
@@ -140,7 +140,7 @@ int builtin_command(char **argv)
     sigset_t mask_all, mask_one, prev_all;
     Sigfillset(&mask_all);
     Sigemptyset(&mask_one);
-    Sigaddset(&mask_one, SIGCHLD);
+    Sigaddset(&mask_one, SIGCHLD);//SAME AS ABOVE
     int status;
     if(!strcmp(argv[0], "exit")){
     Kill(0 , SIGTERM);//off the shell
@@ -225,7 +225,7 @@ int builtin_command(char **argv)
         for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';//kill %
         int tarIdx = atoi(per_int);//string %# -> int #
         int tmp=-1, i;//i   nitial value
-        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);//BLOCK ALL
         for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){//found
                 if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){//if empty 
@@ -243,7 +243,7 @@ int builtin_command(char **argv)
         JobStatus_run(bgCons, tarIdx);//change job status into run
         Run_job(bgCons, tarIdx);//run job
         //JobStatus_empty(bgCons, tarIdx);//change job status into run
-        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
         return 1;   
     }   
     if(strcmp("fg", argv[0])==0){
@@ -252,7 +252,7 @@ int builtin_command(char **argv)
         for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';
         int tarIdx = atoi(per_int);
         int tmp=-1, i;  
-        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);//BLOCK ALL
         for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
@@ -272,7 +272,7 @@ int builtin_command(char **argv)
         JobStatus_run(bgCons, tarIdx);//SAME ABOVE
         Wait_job(bgCons, tarIdx);//must wait (fore ground)
         JobStatus_empty(bgCons, tarIdx);//SAME ABOVE
-        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
         return 1;   
     }   
     if(strcmp("kill", argv[0])==0){
@@ -281,7 +281,7 @@ int builtin_command(char **argv)
         for(int i=0; i<6; i++)  if(per_int[i] == '%')   per_int[i] = '0';
         int tarIdx = atoi(per_int);
         int tmp=-1, i;  
-        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+        Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);//BLOCK ALL
         for(i=0; i<MAXPROCESS; i++){
             if(bgCons[i].job_idx == tarIdx){
                 if(bgCons[i].bgSt == -1 || bgCons[i].job_idx == -1){
@@ -298,7 +298,7 @@ int builtin_command(char **argv)
         /*SAME ABOVE UNTIL HERE*/
         Kill_job(bgCons, tarIdx);//SIGKILL JOB
         JobStatus_empty(bgCons, tarIdx);//SAME ABOVE
-        Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+        Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
         return 1;
     }
 
@@ -347,7 +347,7 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
     sigset_t mask_all, mask_one, prev_all;
     Sigfillset(&mask_all);
     Sigemptyset(&mask_one);
-    Sigaddset(&mask_one, SIGCHLD);
+    Sigaddset(&mask_one, SIGCHLD);//SAME AS ABOVE
     int fd[2];//file descriptor
     pid_t pid;// Process id 
     int status;//WAIT - STATUS
@@ -362,14 +362,14 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
     if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//pipe exist flag
     
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
-        Sigprocmask(SIG_BLOCK, &mask_one, &prev_all);
+        Sigprocmask(SIG_BLOCK, &mask_one, &prev_all);//BLOCK ALL
             if((pid = Fork())==0){//child
                 if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
                 if(pipe_flag){ // 1, 2, 3, ... nth cmd
                     dup2(fd[1], 1);//stdout-pipe
                     close(fd[1]);//close not used pipe
                 }
-                Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+                Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
                 if(execvp(parsedArgv[0], parsedArgv)<0) {
                         printf("%s:Command not found.\n", argv[0]);
                         exit(0);
@@ -379,23 +379,23 @@ void pipe_handler(char** argv, int* arr, int idx, int *oldfd, int bg, char *cmdl
             if(idx!=0) close(*oldfd);//close previous one
             close(fd[1]);//close not used one
             *oldfd = fd[0]; //STDIN - PREVIOUS PIPE
-            Sigprocmask(SIG_BLOCK, &mask_all, NULL);
+            Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);//BLOCK ALL
             Add_job(bgCons, pid, 1, cmdline);//add to job table
-            Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+            Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
             if(pipe_flag)   pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
             if(pid>0)   waitpid(pid, &status, WUNTRACED);//WAIT
             if(pipe_flag){}//NONE
             else{
                 if(WIFEXITED(status)){
-                    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+                    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);//BLOCK ALL
                     JobStatus_empty(bgCons, job_idx);//change job status into empty
                     pidx--;//job_idx --
-                    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+                    Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
                 }
                 else if(WIFSTOPPED(status)){
-                    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);
+                    Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);//BLOCK ALL
                     JobStatus_stop(bgCons, job_idx);//change job status into stop
-                    Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+                    Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
                 }
             }
     }
@@ -408,7 +408,7 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
     sigset_t mask_all, mask_one, prev_all;
     Sigfillset(&mask_all);
     Sigemptyset(&mask_one);
-    Sigaddset(&mask_one, SIGCHLD);
+    Sigaddset(&mask_one, SIGCHLD);//SAME AS ABOVE
     int fd[2];
     pid_t pid;// Process id 
     int status;
@@ -423,14 +423,14 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
     if(arr[idx+1] && arr[idx+1]>-1) pipe_flag=1;//IS THERE '|' EXISTS?
     
     if (!builtin_command(parsedArgv)) { //quit -> exit(0), & -> ignore, other -> run
-        Sigprocmask(SIG_BLOCK, &mask_one, &prev_all);
+        Sigprocmask(SIG_BLOCK, &mask_one, &prev_all);//MASK ALL
             if((pid = Fork())==0){//child
             if(idx!=0 && *oldfd != STDIN_FILENO)   dup2(*oldfd, 0); //stdin-prev 
             if(pipe_flag){ // 1, 2, 3, ... nth cmd
                 dup2(fd[1], 1);//stdout-pipe
                 close(fd[1]);//close not used pipe
             }
-            Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+            Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
             if(execvp(parsedArgv[0], parsedArgv)<0) {
                     printf("%s:Command not found.\n", argv[0]);
                     exit(0);
@@ -440,9 +440,9 @@ void bg_pipe_handler(char **argv, int* arr, int idx, int *oldfd, int bg, char *c
             if(idx!=0) close(*oldfd);//close previous one
             close(fd[1]);//close not used one
             *oldfd = fd[0]; //STDIN - PREVIOUS PIPE
-            Sigprocmask(SIG_BLOCK, &mask_all, NULL);
+            Sigprocmask(SIG_BLOCK, &mask_all, &prev_all);//BLOCK ALL
             Add_job(bgCons, pid, 1, cmdline);//add job to job table
-            Sigprocmask(SIG_SETMASK, &prev_all, NULL);
+            Sigprocmask(SIG_SETMASK, &prev_all, NULL);//BACK TO PREVIOUS
             if(pipe_flag)   bg_pipe_handler(argv, arr, idx+1, oldfd, bg, cmdline, job_idx);//call recursively
     }
     return;
